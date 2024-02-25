@@ -5,11 +5,11 @@ M5Stackに強震モニタを表示
 ## 強震モニタ
 
 防災科学技術研究所によって提供されている、日本全国の今現在の揺れをリアルタイムに表示するWebサービスです。  
-利用条件などは [防災科学技術研究所のホームページ](https://www.kyoshin.bosai.go.jp/kyoshin/docs/new_kyoshinmonitor.shtml#kmoni_useterms)をご確認ください。
+利用条件などは [防災科学技術研究所のホームページ](https://www.kyoshin.bosai.go.jp/kyoshin/docs/new_kyoshinmonitor.shtml)をご確認ください。
 
 ## 対応デバイス
 
-[M5Unified](https://github.com/m5stack/M5Unified?tab=MIT-1-ov-file#readme)を使用させていただいているため、320x240 LCDと16MB以上のFlashを搭載したM5Stack Coreシリーズであれば使用可能かと思います。  
+[M5Unified](https://github.com/m5stack/M5Unified)を使用させていただいているため、320x240 LCDと16MB以上のFlashを搭載したM5Stack Coreシリーズであれば使用可能かと思います。  
 動作確認はM5Stack Basic v2.6でのみ行っています。
 
 ## ビルド・FW書き込み
