@@ -129,23 +129,26 @@ class MapViewScene : public UI::Scene {
             });
         }
 
+        bool shouldRing = false;
         if (!forecast.empty()) {
             displayOn(now);
-            auto forecastType = forecast.type().value;
-            bool shouldRing = !forecast.isFinal;
+            shouldRing = !forecast.isFinal;
             if (settings.muteTraining && forecast.isTraining) shouldRing = false;
-            if (shouldRing && settings.soundRepeat[forecastType] == SoundRepeat::On) {
+        }
+        if (shouldRing) {
+            auto forecastType = forecast.type().value;
+            if (settings.soundRepeat[forecastType] == SoundRepeat::On) {
                 if (!soundController.isPlaying()) {
                     soundController.playSound(settings.soundType[forecastType], true, settings.soundVolume[forecastType]);
                 }
             }
-            if (shouldRing && settings.soundRepeat[forecastType] == SoundRepeat::Update) {
+            if (settings.soundRepeat[forecastType] == SoundRepeat::Update) {
                 if (forecast.isUpdated()) {
                     printf("playSound %d\n", forecastType);
                     soundController.playSound(settings.soundType[forecastType], false, settings.soundVolume[forecastType]);
                 }
             }
-            if (shouldRing && settings.soundRepeat[forecastType] == SoundRepeat::None) {
+            if (settings.soundRepeat[forecastType] == SoundRepeat::None) {
                 if (forecast.isStarted()) {
                     soundController.playSound(settings.soundType[forecastType], false, settings.soundVolume[forecastType]);
                 }
