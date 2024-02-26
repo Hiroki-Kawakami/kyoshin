@@ -17,6 +17,7 @@ class MapViewScene : public UI::Scene {
     Forecast forecast;
     bool updating = false;
     Date lastUpdated = Date(0);
+    int nextUpdateInterval = 0;
     Date showRealtimeImgTypeSwitch = Date(0);
     Date displayOnTime = Date(0);
 
@@ -40,6 +41,7 @@ class MapViewScene : public UI::Scene {
         memset(imgBuffer.u8, 255, sizeof(imgBuffer.u8));
         forecast.clear();
         displayOn(Date());
+        nextUpdateInterval = 0;
     }
 
     void prepareBaseMap() {
@@ -117,7 +119,12 @@ class MapViewScene : public UI::Scene {
     void eventLoop() override {
         auto now = Date();
         Date target = now + SERVER_CONFIG.timeOffset;
-        if (!updating && lastUpdated + SERVER_CONFIG.updateInterval < target) {
+        if (!nextUpdateInterval) nextUpdateInterval = SERVER_CONFIG.updateInterval;
+        if (!updating && lastUpdated + nextUpdateInterval < target) {
+            int delay = 0;
+            if (lastUpdated) delay = (target - lastUpdated) - nextUpdateInterval;
+            nextUpdateInterval = SERVER_CONFIG.updateInterval;
+            if (0 < delay && delay < 200) nextUpdateInterval -= delay;
             lastUpdated = target;
             updating = true;
             bgTask1.send([this, target]() {
