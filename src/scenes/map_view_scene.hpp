@@ -327,10 +327,15 @@ class MapViewScene : public UI::Scene {
         M5.Display.fillRect(x, 0, 4, displayHeight, backgroundColor); x += 4; width -= 4;
 
         M5Canvas drawBuffer(&M5.Display);
-        drawBuffer.createSprite(width, 88);
+        drawBuffer.setColorDepth(2);
+        drawBuffer.createSprite(width, displayHeight);
+        drawBuffer.createPalette();
+        drawBuffer.setPaletteColor(0, TFT_BLACK);
+        drawBuffer.setPaletteColor(1, TFT_WHITE);
+        drawBuffer.setPaletteColor(2, backgroundColor);
 
-        drawBuffer.clear(backgroundColor);
-        drawBuffer.setTextColor(TFT_WHITE, backgroundColor);
+        drawBuffer.fillRect(0, 0, width, 88, 2);
+        drawBuffer.setTextColor(1, 2);
         drawBuffer.setFont(&lgfxJapanGothicP_24);
         drawBuffer.drawString(forecast.alertflg.c_str(), 4, 8);
         drawBuffer.setFont(&lgfxJapanGothicP_16);
@@ -338,26 +343,26 @@ class MapViewScene : public UI::Scene {
         drawBuffer.drawString("震度", 4, 62);
         drawBuffer.setFont(&lgfxJapanGothicP_40_numbers);
         drawBuffer.drawCenterString(forecast.calcintensity.c_str(), width / 2 + 16, 40);
-        drawBuffer.pushSprite(x, 0);
 
-        drawBuffer.clear(TFT_WHITE);
+        drawBuffer.fillRect(0, 88, width, displayHeight - 88, 1);
         drawBuffer.setFont(&lgfxJapanGothicP_24);
-        drawBuffer.setTextColor(TFT_BLACK, TFT_WHITE);
-        drawBuffer.drawCenterString(("M" + forecast.magnitude).c_str(), width / 2, 8);
+        drawBuffer.setTextColor(0, 1);
+        drawBuffer.drawCenterString(("M" + forecast.magnitude).c_str(), width / 2, 96);
         drawBuffer.setFont(&lgfxJapanGothicP_16);
-        drawBuffer.drawString("深さ", 4, 40);
+        drawBuffer.drawString("深さ", 4, 128);
         drawBuffer.setFont(&lgfxJapanGothicP_24);
-        drawBuffer.drawCenterString(forecast.depth.c_str(), width / 2, 56);
-        drawBuffer.pushSprite(x, 88);
+        drawBuffer.drawCenterString(forecast.depth.c_str(), width / 2, 144);
 
-        drawBuffer.clear(TFT_WHITE);
-        drawBuffer.setCursor(4, 0);
-        drawBuffer.setClipRect(4, 0, width - 8, 88);
+        drawBuffer.setCursor(4, 176);
+        drawBuffer.setClipRect(4, 176, width - 8, 64);
         drawBuffer.setFont(&lgfxJapanGothicP_16);
         drawBuffer.println(forecast.regionName.c_str());
         drawBuffer.clearClipRect();
-        drawBuffer.pushSprite(x, 88 * 2);
 
+        drawBuffer.drawRightString(forecast.reportNumString().c_str(), width - 4, 218);
+
+        drawBuffer.pushSprite(x, 0);
+        drawBuffer.deletePalette();
         drawBuffer.deleteSprite();
     }
 };

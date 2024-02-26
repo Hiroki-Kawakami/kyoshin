@@ -10,6 +10,7 @@
 struct Forecast {
     std::string reportId;
     std::string reportTime;
+    std::string reportNum;
     std::string alertflg;
     std::string calcintensity;
     std::string magnitude;
@@ -40,6 +41,7 @@ struct Forecast {
         if (json["result"]["status"].stringValue() != "success") return;
         reportId = json["report_id"].stringValue();
         reportTime = json["report_time"].stringValue();
+        reportNum = json["report_num"].stringValue();
         alertflg = json["alertflg"].stringValue();
         calcintensity = json["calcintensity"].stringValue();
         magnitude = json["magunitude"].stringValue();
@@ -64,6 +66,13 @@ struct Forecast {
     ForecastType type() const {
         if (alertflg == "警報") return ForecastType::Alert;
         return ForecastType::Normal;
+    }
+
+    std::string reportNumString() {
+        if (isCancel) return "キャンセル報";
+        if (isTraining) return "訓練報";
+        if (isFinal) return "最終報";
+        return "第" + reportNum + "報";
     }
 
     bool isStarted() {
