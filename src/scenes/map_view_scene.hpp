@@ -33,6 +33,13 @@ class MapViewScene : public UI::Scene {
         auto layout = forecast.empty() ? layoutModeConfig.normal : layoutModeConfig.alert;
         return VIEW_LAYOUT_CONFIG[layout.value];
     }
+    bool inNightMode() const {
+        if (!settings.useNightMode) return false;
+        auto now = Date().localtime() / 60 % 1440;
+        auto start = settings.nightStart, end = settings.nightEnd;
+        if (start < end) return start <= now && now < end;
+        return now < end || start <= now;
+    }
 
     void willAppear() override {
         M5.Display.setRotation(layoutConfig().rotation);
@@ -113,7 +120,12 @@ class MapViewScene : public UI::Scene {
 
     void displayOn(Date now) {
         displayOnTime = now;
-        if (M5.Display.getBrightness() <= settings.dimBrightness) M5.Display.setBrightness(settings.brightness);
+        if (M5.Display.getBrightness() != settings.brightness) M5.Display.setBrightness(settings.brightness);
+    }
+    void displayOff(bool nightMode) {
+        int16_t brightness = nightMode ? 0 : settings.dimBrightness;
+        if (brightness < 0) return;
+        if (M5.Display.getBrightness() != brightness) M5.Display.setBrightness(brightness);
     }
 
     void eventLoop() override {
@@ -140,10 +152,12 @@ class MapViewScene : public UI::Scene {
             });
         }
 
-        bool shouldRing = false;
+        bool shouldRing = false, nightMode = inNightMode();
         if (!forecast.empty()) {
             displayOn(now);
-            shouldRing = !forecast.isFinal;
+            shouldRing = true;
+            if (!forecast.isFinal) shouldRing = false;
+            if (nightMode && forecast.type() == ForecastType::Normal) shouldRing = false;
             if (settings.muteTraining && forecast.isTraining) shouldRing = false;
         }
         if (shouldRing) {
@@ -167,15 +181,16 @@ class MapViewScene : public UI::Scene {
         } else {
             soundController.stop();
         }
+        soundController.eventLoop();
         forecast.updateReportTime();
 
-        if (M5.Display.getBrightness() <= settings.dimBrightness) {
+        if (M5.Display.getBrightness() < settings.brightness) {
             if (M5.BtnA.wasPressed() || M5.BtnB.wasPressed() || M5.BtnC.wasPressed()) displayOn(now);
+            else displayOff(nightMode);
             return;
         }
         if (!realtimeImgTypeSwitchButtonAction(now)) buttonAction(now);
-        if (settings.dimBrightness >= 0 && now - displayOnTime > settings.dimDuration * 1000) M5.Display.setBrightness(settings.dimBrightness);
-        soundController.eventLoop();
+        if (now - displayOnTime > settings.dimDuration * 1000) displayOff(nightMode);
     }
 
     void update(Date target, bool displayIsOn) {

@@ -7,12 +7,13 @@
 #include "config/layout_config.hpp"
 #include "display_settings_scene.hpp"
 #include "sound_settings_scene.hpp"
+#include "night_mode_settings_scene.hpp"
 #include "reset_scene.hpp"
 
 class SettingsScene : public UI::ListScene {
 public:
     int numberOfRows() override {
-        return 4;
+        return 5;
     }
     void itemForRow(int row, UI::ListItem &item) override {
         switch (row) {
@@ -28,6 +29,9 @@ public:
             item.title = "警報音設定";
             break;
         case 3:
+            item.title = "夜間モード";
+            break;
+        case 4:
             item.title = "リセット";
             break;
         }
@@ -45,6 +49,9 @@ public:
             presentScene(std::make_shared<SoundSettingsScene>());
             break;
         case 3:
+            presentScene(std::make_shared<NightModeSettingsScene>());
+            break;
+        case 4:
             presentScene(std::make_shared<ResetScene>());
             break;
         }

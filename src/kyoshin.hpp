@@ -12,6 +12,7 @@
 #include "modules/settings.hpp"
 #include "modules/sound_controller.hpp"
 
+using std::function;
 using std::string;
 using std::shared_ptr;
 using std::weak_ptr;

@@ -40,6 +40,7 @@ struct Date {
 
     time_t epoch() const { return time_ms / 1000; }
     int msec() const { return time_ms % 1000; }
+    long long localtime() const { return time_ms / 1000 + 9 * 60 * 60; }
 
     std::string strftime(const char *format) const {
         char buf[128];

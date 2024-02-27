@@ -37,6 +37,9 @@ public:
         restore<uint8_t>("alert_vol"     , 64                             , [&](uint8_t x) { soundVolume[ForecastType::Alert ] = x;              });
         restore<uint8_t>("alert_sound"   , SoundType::Alarm2              , [&](uint8_t x) { soundType  [ForecastType::Alert ] = SoundType(x);   });
         restore<uint8_t>("alert_repeat"  , SoundRepeat::On                , [&](uint8_t x) { soundRepeat[ForecastType::Alert ] = SoundRepeat(x); });
+        restore<uint8_t>("use_night_mode", false                          , [&](uint8_t x) { useNightMode    = x;                                });
+        restore<int16_t>("night_start"   , 23 * 60                        , [&](int16_t x) { nightStart      = x;                                });
+        restore<int16_t>("night_end"     , 7 * 60                         , [&](int16_t x) { nightEnd        = x;                                });
         restore<uint8_t>("mute_training" , true                           , [&](uint8_t x) { muteTraining    = x;                                });
         restore<uint8_t>("wifi_setup"    , false                          , [&](uint8_t x) { wifiSetup       = x;                                });
     }
@@ -100,6 +103,22 @@ public:
     void setSoundRepeat(ForecastType type, SoundRepeat repeat) {
         soundRepeat[type.value] = repeat;
         nvs.set(forecastTypeId(type) + "_repeat", (uint8_t)repeat.value);
+    }
+
+    bool useNightMode;
+    void setUseNightMode(bool use) {
+        useNightMode = use;
+        nvs.set("use_night_mode", (uint8_t)use);
+    }
+
+    int16_t nightStart, nightEnd;
+    void setNightStart(int16_t start) {
+        nightStart = start;
+        nvs.set("night_start", start);
+    }
+    void setNightEnd(int16_t end) {
+        nightEnd = end;
+        nvs.set("night_end", end);
     }
 
     bool muteTraining;
