@@ -51,7 +51,7 @@ public:
         case 0:
             flashImage.clear();
             flashImageCleared = true;
-            drawItem(index);
+            reloadData();
             break;
         case 1:
             settings.setWifiSetup(true);

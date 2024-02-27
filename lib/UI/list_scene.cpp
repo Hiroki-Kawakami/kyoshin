@@ -9,10 +9,11 @@ UI_IMPL_BEGIN
 
 void ListScene::eventLoop() {
     if (M5.BtnB.wasPressed()) {
-        int prev = selectedRow++;
-        if (selectedRow >= numberOfRows()) selectedRow = 0;
-        drawItem(prev);
-        drawItem(selectedRow);
+        selectedRow++;
+        int n = numberOfRows();
+        if (selectedRow >= n) selectedRow = 0;
+        displayOffset = selectedRow > 2 ? std::min(selectedRow - 2, n - 4) : 0;
+        reloadData();
     }
     if (M5.BtnC.wasPressed()) {
         itemSelected(selectedRow);
@@ -21,33 +22,46 @@ void ListScene::eventLoop() {
 }
 
 void ListScene::display() {
-    M5.Display.clear(TFT_WHITE);
-    for (int i = 0, n = numberOfRows(); i < n; i++) {
-        drawItem(i);
-    }
+    clearButton(0, 3, TFT_WHITE);
+    reloadData();
     drawButton(0, 1, "戻る");
     drawButton(1, 1, "▼");
 }
 
-void ListScene::drawItem(int index) {
-    ListItem item = { "" , "" , "選択" } ;
-    int itemHeight = 50;
-    int displayWidth = M5.Display.width();
-    int bgColor = index == selectedRow ? TFT_SKYBLUE : TFT_WHITE;
-    int fgColor = index == selectedRow ? TFT_WHITE : TFT_BLACK;
-    itemForRow(index, item);
-    M5.Display.fillRect(0, index * itemHeight, displayWidth, itemHeight, bgColor);
-    M5.Display.setTextColor(fgColor);
-    if (item.value.empty()) {
-        M5.Display.setFont(&lgfxJapanGothicP_24);
-        M5.Display.drawString(item.title.c_str(), 8, index * itemHeight + 13);
-    } else {
-        M5.Display.setFont(&lgfxJapanGothicP_24);
-        M5.Display.drawString(item.title.c_str(), 8, index * itemHeight + 4);
-        M5.Display.setFont(&lgfxJapanGothicP_16);
-        M5.Display.drawString(item.value.c_str(), 8, index * itemHeight + 28);
+void ListScene::reloadData() {
+    M5Canvas drawBuffer(&M5.Display);
+    drawBuffer.setColorDepth(2);
+    int width = M5.Display.width(), height = 50;
+    drawBuffer.createSprite(width, height);
+
+    constexpr uint16_t colors[4] = { TFT_BLACK, TFT_LIGHTGRAY, TFT_WHITE, TFT_SKYBLUE };
+    drawBuffer.createPalette(colors, 4);
+    for (int i = 0, n = numberOfRows(); i < 4; i++) {
+        int index = i + displayOffset;
+        if (index >= n) index = -1;
+        drawItem(index, drawBuffer, width, height);
+        drawBuffer.pushSprite(0, i * height);
     }
-    M5.Display.drawRect(0, (index + 1) * itemHeight - 1, displayWidth, 1, TFT_LIGHTGREY);
+}
+
+void ListScene::drawItem(int index, M5Canvas &drawBuffer, int width, int height) {
+    bool isSelected = index == selectedRow;
+    drawBuffer.clear(isSelected ? 3 : 2);
+    drawBuffer.drawRect(0, height - 1, width, 1, 1);
+    if (index < 0) return;
+
+    ListItem item = { "" , "" , "選択" } ;
+    itemForRow(index, item);
+    drawBuffer.setTextColor(isSelected ? 2 : 0);
+    if (item.value.empty()) {
+        drawBuffer.setFont(&lgfxJapanGothicP_24);
+        drawBuffer.drawString(item.title.c_str(), 8, 13);
+    } else {
+        drawBuffer.setFont(&lgfxJapanGothicP_24);
+        drawBuffer.drawString(item.title.c_str(), 8, 4);
+        drawBuffer.setFont(&lgfxJapanGothicP_16);
+        drawBuffer.drawString(item.value.c_str(), 8, 28);
+    }
     if (index == selectedRow) drawButton(2, 1, item.button);
 }
 

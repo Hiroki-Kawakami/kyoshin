@@ -36,7 +36,7 @@ public:
             break;
         case 2:
             settings.setMuteTraining(!settings.muteTraining);
-            drawItem(index);
+            reloadData();
             break;
         }
     }

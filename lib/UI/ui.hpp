@@ -68,9 +68,11 @@ struct ListItem {
 class ListScene : public UI::Scene {
 protected:
     int selectedRow = 0;
+    int displayOffset = 0;
     virtual void eventLoop() override;
     virtual void display() override;
-    virtual void drawItem(int index);
+    void reloadData();
+    void drawItem(int index, M5Canvas &drawBuffer, int width, int height);
 
 public:
     virtual int numberOfRows() = 0;

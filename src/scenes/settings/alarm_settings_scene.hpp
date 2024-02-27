@@ -76,15 +76,15 @@ public:
         switch (index) {
         case 0:
             settings.setSoundVolume(forecastType, volumeValue((volumeIndex(settings.soundVolume[forecastType.value]) + 1) % 11));
-            drawItem(index);
+            reloadData();
             break;
         case 1:
             settings.setSoundType(forecastType, settings.soundType[forecastType.value].next());
-            drawItem(index);
+            reloadData();
             break;
         case 2:
             settings.setSoundRepeat(forecastType, settings.soundRepeat[forecastType.value].next());
-            drawItem(index);
+            reloadData();
             break;
         case 3:
             presentScene(std::make_shared<SoundTestScene>(forecastType));

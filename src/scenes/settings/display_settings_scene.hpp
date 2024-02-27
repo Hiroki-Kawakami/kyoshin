@@ -55,15 +55,15 @@ public:
         switch (index) {
         case 0:
             settings.setBrightness(settings.brightness % 100 + 10);
-            drawItem(index);
+            reloadData();
             break;
         case 1:
             settings.setDimBrightness(nextDimBrightness());
-            drawItem(index);
+            reloadData();
             break;
         case 2:
             settings.setDimDuration(nextDimDuration());
-            drawItem(index);
+            reloadData();
             break;
         }
     }

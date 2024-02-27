@@ -36,7 +36,7 @@ public:
         switch (index) {
         case 0:
             settings.setLayoutMode(settings.layoutMode.next());
-            drawItem(index);
+            reloadData();
             break;
         case 1:
             presentScene(std::make_shared<DisplaySettingsScene>());
