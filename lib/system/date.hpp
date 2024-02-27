@@ -38,6 +38,9 @@ struct Date {
     bool operator!=(const Date &other) const { return time_ms != other.time_ms; }
     explicit operator bool() const { return time_ms > 0; }
 
+    time_t epoch() const { return time_ms / 1000; }
+    int msec() const { return time_ms % 1000; }
+
     std::string strftime(const char *format) const {
         char buf[128];
         time_t t = time_ms / 1000;

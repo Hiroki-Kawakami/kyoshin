@@ -36,6 +36,7 @@ struct ServerConfig {
     int imgHeight;
     int timeOffset;
     int updateInterval;
+    int idleUpdateInterval;
     MapRegionConfig regions[MapRegion::count];
     const char *forecastUrlFormat;
 };
@@ -45,8 +46,9 @@ struct ServerConfig {
 inline constexpr ServerConfig SERVER_CONFIG = {
     .imgWidth = 352,
     .imgHeight = 400,
-    .timeOffset = -2500,
-    .updateInterval = 1000,
+    .timeOffset = -2000, // msec
+    .updateInterval = 1, // sec
+    .idleUpdateInterval = 10, // sec
     .regions = {
         {
             .identifier = "japan",

@@ -16,7 +16,7 @@ class MapViewScene : public UI::Scene {
     shared_ptr<FlashImagePartition> flashImagePartition;
     Forecast forecast;
     bool updating = false;
-    Date lastUpdated = Date(0);
+    time_t lastUpdated = 0;
     int nextUpdateInterval = 0;
     Date showRealtimeImgTypeSwitch = Date(0);
     Date displayOnTime = Date(0);
@@ -119,16 +119,20 @@ class MapViewScene : public UI::Scene {
     void eventLoop() override {
         auto now = Date();
         Date target = now + SERVER_CONFIG.timeOffset;
-        if (!nextUpdateInterval) nextUpdateInterval = SERVER_CONFIG.updateInterval;
-        if (!updating && lastUpdated + nextUpdateInterval < target) {
-            int delay = 0;
-            if (lastUpdated) delay = (target - lastUpdated) - nextUpdateInterval;
-            nextUpdateInterval = SERVER_CONFIG.updateInterval;
-            if (0 < delay && delay < 200) nextUpdateInterval -= delay;
-            lastUpdated = target;
+        time_t targetEpoch = target.epoch();
+        bool shouldUpdate = false;
+        if (!updating) {
+            if (!lastUpdated) shouldUpdate = true;
+            else if (target.msec() >= 500) shouldUpdate = false;
+            else if (targetEpoch % SERVER_CONFIG.updateInterval != 0) shouldUpdate = false;
+            else shouldUpdate = targetEpoch != lastUpdated;
+        }
+        if (shouldUpdate) {
+            bool displayIsOn = M5.Display.getBrightness() >= settings.brightness;
+            lastUpdated = targetEpoch;
             updating = true;
-            bgTask1.send([this, target]() {
-                update(target);
+            bgTask1.send([this, target, displayIsOn]() {
+                update(target, displayIsOn);
                 UI::send([this]() {
                     updating = false;
                     setNeedsDisplay();
@@ -174,9 +178,11 @@ class MapViewScene : public UI::Scene {
         soundController.eventLoop();
     }
 
-    void update(Date target) {
+    void update(Date target, bool displayIsOn) {
         printf("update %s\n", target.strftime("%Y-%m-%d %H:%M:%S").c_str());
         checkForecast(target);
+
+        if (!displayIsOn && forecast.empty() && target.epoch() % SERVER_CONFIG.idleUpdateInterval != 0) return;
         if (!updateRealtimeImg(target)) return;
         if (!lastUpdated) return;
         updatePsWaveImg(target);
