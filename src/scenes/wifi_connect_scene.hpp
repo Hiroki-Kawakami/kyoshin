@@ -17,35 +17,41 @@ class WifiConnectScene : public UI::Scene {
 
     void connect() {
         ssid = Networking::ssid();
-        this->setTextStyle();
-        M5.Display.print("Connecting to ");
-        M5.Display.print(ssid.c_str());
-        M5.Display.print("...");
         bgTask1.send([&]() {
-            Networking::connect();
-            Networking::waitNetworkConnect();
-            M5.Display.print(" : ");
-            this->setTextStyle(TFT_GREEN);
-            M5.Display.println("done.");
+            this->connectNetwork();
             this->syncRealtimeClock();
         });
+    }
+
+    void connectNetwork() {
+        this->setTextStyle();
+        M5.Display.print(("Connecting to " + ssid + "...").c_str());
+        for (int i = 0; i < 3; i++) {
+            if (Networking::connect()) break;
+            M5.Display.print("\nFailed. Retrying...");
+        }
+        if (!Networking::isWiFiConnected()) {
+            error("\nFailed to connect to " + ssid + ".");
+        }
+        Networking::waitNetworkConnect();
+        M5.Display.print(" : ");
+        this->setTextStyle(TFT_GREEN);
+        M5.Display.println("done.");
     }
 
     void syncRealtimeClock() {
         this->setTextStyle();
         M5.Display.print("Synchronizing realtime clock...");
-        bgTask1.send([&]() {
-            if (Networking::startSntp()) {
-                M5.Display.print(" : ");
-                this->setTextStyle(TFT_GREEN);
-                M5.Display.println("done.");
-                this->done();
-            } else {
-                this->setTextStyle(TFT_RED);
-                M5.Display.println("failed.");
-                this->error();
-            }
-        });
+        if (Networking::startSntp()) {
+            M5.Display.print(" : ");
+            this->setTextStyle(TFT_GREEN);
+            M5.Display.println("done.");
+            this->done();
+        } else {
+            this->setTextStyle(TFT_RED);
+            M5.Display.println("failed.");
+            this->error();
+        }
     }
 
     void setTextStyle(int color = TFT_BLACK) {

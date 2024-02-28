@@ -118,6 +118,22 @@ class MapViewScene : public UI::Scene {
         if (i > 0) flashImagePartition->write(type, offset * 2, imgBuffer.u16, i * 2);
     }
 
+    void checkNetworkStatus() {
+        if (Networking::isNetworkConnected()) return;
+        lastUpdated = 0;
+        M5.Display.setCursor(0, 0);
+        M5.Display.setTextColor(TFT_WHITE, TFT_BLACK);
+        M5.Display.println("WiFi Disconnected.");
+        if (updating) return;
+        httpClient.reset();
+        if (!Networking::isWiFiConnecting() && !Networking::isWiFiConnected()) {
+            bgTask1.send([]() {
+                Networking::connect();
+            });
+        }
+        M5.Display.println("Reconnecting...");
+    }
+
     void displayOn(Date now) {
         displayOnTime = now;
         if (M5.Display.getBrightness() != settings.brightness) M5.Display.setBrightness(settings.brightness);
@@ -129,12 +145,15 @@ class MapViewScene : public UI::Scene {
     }
 
     void eventLoop() override {
+        checkNetworkStatus();
+
         auto now = Date();
         Date target = now + SERVER_CONFIG.timeOffset;
         time_t targetEpoch = target.epoch();
         bool shouldUpdate = false;
         if (!updating) {
-            if (!lastUpdated) shouldUpdate = true;
+            if (!Networking::isNetworkConnected()) shouldUpdate = false;
+            else if (!lastUpdated) shouldUpdate = true;
             else if (target.msec() >= 500) shouldUpdate = false;
             else if (targetEpoch % SERVER_CONFIG.updateInterval != 0) shouldUpdate = false;
             else shouldUpdate = targetEpoch != lastUpdated;
@@ -155,7 +174,7 @@ class MapViewScene : public UI::Scene {
         bool shouldRing = false, nightMode = inNightMode();
         if (!forecast.empty()) {
             displayOn(now);
-            shouldRing = true;
+            shouldRing = Networking::isNetworkConnected();
             if (!forecast.isFinal) shouldRing = false;
             if (nightMode && forecast.type() == ForecastType::Normal) shouldRing = false;
             if (settings.muteTraining && forecast.isTraining) shouldRing = false;

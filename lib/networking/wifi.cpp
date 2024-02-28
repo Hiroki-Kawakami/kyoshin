@@ -14,9 +14,11 @@ static const char *TAG = "wifi";
 
 enum class NetworkEventBits {
     WiFiStart        = 1 << 0,
-    WiFiConnected    = 1 << 1,
-    NetworkConnected = 1 << 2,
-    SntpSynced       = 1 << 3,
+    WiFiConnecting   = 1 << 1,
+    WiFiConnectEnd   = 1 << 2,
+    WiFiConnected    = 1 << 3,
+    NetworkConnected = 1 << 4,
+    SntpSynced       = 1 << 5,
 };
 static RTOS::EventGroup<NetworkEventBits> event_group;
 
@@ -29,9 +31,13 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t e
     case WIFI_EVENT_STA_CONNECTED:
         ESP_LOGI(TAG, "WIFI_EVENT_STA_CONNECTED");
         event_group.setBits(NetworkEventBits::WiFiConnected);
+        event_group.setBits(NetworkEventBits::WiFiConnectEnd);
         break;
     case WIFI_EVENT_STA_DISCONNECTED:
         ESP_LOGI(TAG, "WIFI_EVENT_STA_DISCONNECTED");
+        event_group.clearBits(NetworkEventBits::NetworkConnected);
+        event_group.clearBits(NetworkEventBits::WiFiConnected);
+        event_group.setBits(NetworkEventBits::WiFiConnectEnd);
         break;
     default:
         break;
@@ -85,16 +91,29 @@ void setWiFiConfig(wifi_config_t *config) {
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, config));
 }
 
-void connect() {
+bool connect() {
     if (!event_group.contains(NetworkEventBits::WiFiStart)) {
         ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
         ESP_ERROR_CHECK(esp_wifi_start());
         waitStationStart();
     }
+    event_group.clearBits(NetworkEventBits::WiFiConnectEnd);
+    event_group.setBits(NetworkEventBits::WiFiConnecting);
     ESP_ERROR_CHECK(esp_wifi_connect());
+    event_group.waitBits(NetworkEventBits::WiFiConnectEnd);
+    event_group.clearBits(NetworkEventBits::WiFiConnecting);
+    return event_group.contains(NetworkEventBits::WiFiConnected);
 }
 
-bool isConnected() {
+bool isWiFiConnecting() {
+    return event_group.contains(NetworkEventBits::WiFiConnecting);
+}
+
+bool isWiFiConnected() {
+    return event_group.contains(NetworkEventBits::WiFiConnected);
+}
+
+bool isNetworkConnected() {
     return event_group.contains(NetworkEventBits::NetworkConnected);
 }
 

@@ -113,4 +113,11 @@ bool HTTPClient::get(string url, int redirect) {
     return true;
 }
 
+void HTTPClient::reset() {
+    if (client) {
+        esp_http_client_cleanup(client);
+        client = nullptr;
+    }
+}
+
 NETWORKING_IMPL_END

@@ -30,8 +30,10 @@ string ssid();
 void waitStationStart();
 void getWiFiConfigWithDPP(function<void(const char *)> uriReady, function<void(wifi_config_t *, const char *)> done);
 void setWiFiConfig(wifi_config_t *config);
-void connect();
-bool isConnected();
+bool connect();
+bool isWiFiConnecting();
+bool isWiFiConnected();
+bool isNetworkConnected();
 void waitNetworkConnect();
 bool startSntp();
 
@@ -53,6 +55,7 @@ public:
     int statusCode();
     void clearBuffer();
     bool get(string url, int redirect = 0);
+    void reset();
 };
 
 NETWORKING_IMPL_END

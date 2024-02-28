@@ -88,6 +88,10 @@ namespace RTOS {
         }
     };
 
+    inline void delay(int ms) {
+        vTaskDelay(pdMS_TO_TICKS(ms));
+    }
+
     inline void timeout(int ms, function<void()> func) {
         TimerHandle_t timer = xTimerCreate("timeout", pdMS_TO_TICKS(ms), pdFALSE, new function<void()>(func), [](TimerHandle_t timer) {
             auto func = static_cast<function<void()>*>(pvTimerGetTimerID(timer));
