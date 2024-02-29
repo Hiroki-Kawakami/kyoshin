@@ -175,7 +175,7 @@ class MapViewScene : public UI::Scene {
         if (!forecast.empty()) {
             displayOn(now);
             shouldRing = Networking::isNetworkConnected();
-            if (!forecast.isFinal) shouldRing = false;
+            if (forecast.isFinal) shouldRing = false;
             if (nightMode && forecast.type() == ForecastType::Normal) shouldRing = false;
             if (settings.muteTraining && forecast.isTraining) shouldRing = false;
         }
