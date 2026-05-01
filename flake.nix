@@ -33,6 +33,7 @@
             pkgs.gcc
             pkgs.ccache
             pkgs.curl
+            pkgs.cjson
             pkgs.SDL2
           ];
           shellHook = ''
