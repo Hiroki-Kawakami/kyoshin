@@ -1,5 +1,8 @@
+#include "kyoshin_app.hpp"
 #include "screens/wifi_connect_screen.hpp"
 #include "network_manager.hpp"
+
+KyoshinMonitor *kyoshin_monitor;
 
 void show_wifi_connect() {
     auto wifi_connect_screen = std::make_unique<WiFiConnectScreen>();

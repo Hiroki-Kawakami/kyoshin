@@ -15,7 +15,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Load SDL2
 find_package(SDL2 REQUIRED)
-find_package(SDL2_net REQUIRED)
+find_package(CURL REQUIRED)
 
 # Load LVGL
 FetchContent_Declare(
@@ -46,5 +46,5 @@ file(GLOB_RECURSE DEVICE_SOURCES CONFIGURE_DEPENDS src/*.c src/*.cpp)
 target_compile_definitions(simulator PRIVATE SDL_DISABLE_ARM_NEON_H)
 target_sources(simulator PRIVATE ${DEVICE_SOURCES})
 target_include_directories(simulator PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_link_libraries(simulator SDL2::SDL2 SDL2_net::SDL2_net lvgl)
+target_link_libraries(simulator SDL2::SDL2 lvgl CURL::libcurl)
 target_add_components(simulator ${CMAKE_CURRENT_SOURCE_DIR}/../app)

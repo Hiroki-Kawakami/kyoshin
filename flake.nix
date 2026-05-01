@@ -32,8 +32,8 @@
             esp-idf
             pkgs.gcc
             pkgs.ccache
+            pkgs.curl
             pkgs.SDL2
-            pkgs.SDL2_net
           ];
           shellHook = ''
             export ESP_IDF_VERSION="5.4"
