@@ -10,6 +10,8 @@
           "--compile-commands-dir=build",
           // "--query-driver=/nix/store/bpp3857xyzj73cy4ma11ks4vrg0rpwjy-xtensa-esp-elf-esp-idf-v5.4.3/bin/xtensa-esp32-elf-*",
           // "--compile-commands-dir=esp32/build",
+          // "--query-driver=/nix/store/bpp3857xyzj73cy4ma11ks4vrg0rpwjy-xtensa-esp-elf-esp-idf-v5.4.3/bin/xtensa-esp32s3-elf-*",
+          // "--compile-commands-dir=esp32s3/build",
         ],
       },
     },

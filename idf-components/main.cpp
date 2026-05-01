@@ -4,7 +4,7 @@
 static void gui_init() {
     M5.begin();
     M5.Display.setSwapBytes(true);
-    int fbsize = 240 * 80 * sizeof(uint16_t);
+    int fbsize = 320 * 80 * sizeof(uint16_t);
 
     uint16_t *lvgl_frame_buffer = (uint16_t*)pvPortMalloc(fbsize);
     assert(lvgl_frame_buffer);
