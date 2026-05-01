@@ -1,0 +1,7 @@
+## IDF Component Manager Manifest File
+dependencies:
+  ## Required IDF version
+  idf: ">=5.3"
+  espressif/esp_lvgl_port: ^2.7.0
+  m5stack/m5gfx: ^0.2.19
+  m5stack/m5unified: ^0.2.13

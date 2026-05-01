@@ -1,6 +1,6 @@
 dependencies:
   espressif/esp_lvgl_port:
-    component_hash: f872401524cb645ee6ff1c9242d44fb4ddcfd4d37d7be8b9ed3f4e85a404efcd
+    component_hash: b6360960f47b6776462e7092861b3ea66477ffb762a01baa0aecbb3d74cd50f4
     dependencies:
     - name: idf
       require: private
@@ -12,41 +12,41 @@ dependencies:
     source:
       registry_url: https://components.espressif.com/
       type: service
-    version: 2.7.0
+    version: 2.7.2
   idf:
     source:
       type: idf
     version: 5.4.3
   lvgl/lvgl:
-    component_hash: 17e68bfd21f0edf4c3ee838e2273da840bf3930e5dbc3bfa6c1190c3aed41f9f
+    component_hash: 184e532558c1c45fefed631f3e235423d22582aafb4630f3e8885c35281a49ae
     dependencies: []
     source:
       registry_url: https://components.espressif.com
       type: service
-    version: 9.4.0
+    version: 9.5.0
   m5stack/m5gfx:
-    component_hash: 4c420c89ae7bfe33231dab80b784f4508591279b2a3a935ac849dddb1942d0d5
+    component_hash: f161e9770bd415c79aa167e8441c4cd74dd460cf2c220d0060b51edf84b54e8a
     dependencies: []
     source:
       registry_url: https://components.espressif.com/
       type: service
-    version: 0.2.17
+    version: 0.2.19
   m5stack/m5unified:
-    component_hash: 1c75bb80654da6c7fcdd11ef7a1cb9b7d6db2e98f96612a4babf12b5e9bc7196
+    component_hash: 3d1509ffd4198f8086d58c1b5fe8838b595e713e31a1c5d3f084d03ea63a9ec2
     dependencies:
     - name: m5stack/m5gfx
       registry_url: https://components.espressif.com
       require: private
-      version: ^0.2.17
+      version: ^0.2.19
     source:
       registry_url: https://components.espressif.com/
       type: service
-    version: 0.2.11
+    version: 0.2.13
 direct_dependencies:
 - espressif/esp_lvgl_port
 - idf
 - m5stack/m5gfx
 - m5stack/m5unified
-manifest_hash: 8494caa981462680e6666d2a59ad2516e28543cf27a00d177d55fac919947b5f
+manifest_hash: 7fcf35d3b5ac547e52b5105b1075e497b7f71c8ff2424157378c6e2e62586c13
 target: esp32
 version: 2.0.0

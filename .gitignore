@@ -2,6 +2,7 @@ build
 managed_components
 sdkconfig
 sdkconfig.old
-.vscode
-.clangd
+.cache
+.deps
+.direnv
 .DS_Store
