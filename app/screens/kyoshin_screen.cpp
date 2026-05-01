@@ -11,6 +11,8 @@ void KyoshinScreen::build() {
 }
 
 void KyoshinScreen::onAppear() {
-    time_t time = kyoshin_monitor->getLatestTime();
-    printf("getLatestTime: %s", ctime(&time));
+    kyoshin_monitor->startUpdateTimer();
+}
+void KyoshinScreen::onDisappear() {
+    kyoshin_monitor->stopUpdateTimer();
 }

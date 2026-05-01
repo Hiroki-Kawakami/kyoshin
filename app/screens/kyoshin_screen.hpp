@@ -5,4 +5,5 @@ class KyoshinScreen: public Screen {
 public:
     virtual void build();
     virtual void onAppear();
+    virtual void onDisappear();
 };
