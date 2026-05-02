@@ -29,7 +29,7 @@ inline KyoshinMonitorEvent operator&(KyoshinMonitorEvent a, KyoshinMonitorEvent 
 
 class KyoshinMonitorCallback {
 public:
-    virtual void onData(const uint16_t *img) = 0;
+    virtual void onData(uint16_t *img) = 0;
 };
 
 class KyoshinMonitor {

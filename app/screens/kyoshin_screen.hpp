@@ -7,7 +7,7 @@ public:
     virtual void build();
     virtual void onAppear();
     virtual void onDisappear();
-    virtual void onData(const uint16_t *data);
+    virtual void onData(uint16_t *data);
 
 private:
     lv_obj_t *image_;
