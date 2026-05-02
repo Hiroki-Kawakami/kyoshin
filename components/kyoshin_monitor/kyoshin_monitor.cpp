@@ -90,25 +90,32 @@ bool KyoshinMonitor::downloadRealtimeImage(time_t time) {
     return true;
 }
 
-void KyoshinMonitor::decodeRealtimeImage() {
-    if (!realtime_img_gif_.has_value()) {
-        printf("KyoshinMonitor::decodeRealtimeImage: !realtime_img_gif_.has_value()\n");
-        event_group_.setBits(KyoshinMonitorEvent::Error);
-        return;
-    }
-    auto err = gif_decoder_.decode(realtime_img_gif_->data(), realtime_img_gif_->size(), imageBuffer());
-    if (err == GifDecoder::Error::None) {
-        event_group_.setBits(KyoshinMonitorEvent::ImageRendered);
+bool KyoshinMonitor::downloadPsWaveImage(time_t time) {
+    auto path = strftime(time, regionConfig().psWaveUrlFormat);
+    auto response = http_client_.get(path);
+    if (response.ok()) {
+        pswave_img_gif_ = std::move(response.data);
+        event_group_.setBits(KyoshinMonitorEvent::PsWaveImageDownloaded);
+        return true;
     } else {
+        event_group_.setBits(KyoshinMonitorEvent::PsWaveImageSkip);
+        return false;
+    }
+}
+
+void KyoshinMonitor::decodeGifImage(uint8_t *data, size_t size) {
+    auto err = gif_decoder_.decode(data, size, imageBuffer());
+    if (err == GifDecoder::Error::SizeMismatch) {
+        return;
+    } else if (err != GifDecoder::Error::None) {
         printf("Gif decode failed: %d\n", static_cast<int>(err));
         event_group_.setBits(KyoshinMonitorEvent::Error);
     }
 }
 
 void KyoshinMonitor::worker1() {
-    const auto mask1 = KyoshinMonitorEvent::Update | KyoshinMonitorEvent::Worker1Stop;
-    auto event = event_group_.waitBits(mask1) & mask1;
-    if (event == KyoshinMonitorEvent::Worker1Stop) {
+    auto event = event_group_.waitBits(KyoshinMonitorEvent::Update | KyoshinMonitorEvent::Worker1Stop);
+    if (event & KyoshinMonitorEvent::Worker1Stop) {
         event_group_.setBits(KyoshinMonitorEvent::Worker1End);
         return;
     }
@@ -120,26 +127,49 @@ void KyoshinMonitor::worker1() {
         imageBuffer()[i] = 0xffff;
     }
     if (!downloadRealtimeImage(time)) goto end;
+    downloadPsWaveImage(time);
 
-    event_group_.waitBitsAndClear(KyoshinMonitorEvent::ImageRendered);
+    event = event_group_.waitBitsAndClear(KyoshinMonitorEvent::ImageRendered | KyoshinMonitorEvent::Error);
+    if (event & KyoshinMonitorEvent::Error) goto end;
     if (callback_) callback_->onData(imageBuffer());
     image_buffer_idx_ = (image_buffer_idx_ + 1) % image_buffers_.size();
 end:
-    event_group_.clearBits(KyoshinMonitorEvent::Update);
+    event_group_.clearBits(KyoshinMonitorEvent::Update | KyoshinMonitorEvent::Error);
 }
 void KyoshinMonitor::worker2() {
-    const auto mask2 = KyoshinMonitorEvent::RealtimeImageDownloaded | KyoshinMonitorEvent::Worker2Stop;
-    auto event = event_group_.waitBitsAndClear(mask2) & mask2;
-    switch (event) {
-    case KyoshinMonitorEvent::RealtimeImageDownloaded:
-        decodeRealtimeImage();
-        break;
-    case KyoshinMonitorEvent::Worker2Stop:
+    auto event = event_group_.waitBits(
+        KyoshinMonitorEvent::RealtimeImageDownloaded |
+        KyoshinMonitorEvent::PsWaveImageDownloaded |
+        KyoshinMonitorEvent::PsWaveImageSkip |
+        KyoshinMonitorEvent::Worker2Stop);
+    if (event & KyoshinMonitorEvent::RealtimeImageDownloaded) {
+        if (realtime_img_gif_.has_value()) {
+            decodeGifImage(realtime_img_gif_->data(), realtime_img_gif_->size());
+        } else {
+            printf("realtime_img_gif_ is empty!\n");
+            event_group_.setBits(KyoshinMonitorEvent::Error);
+        }
+        event_group_.clearBits(KyoshinMonitorEvent::RealtimeImageDownloaded);
+        return;
+    }
+    if (event & KyoshinMonitorEvent::PsWaveImageDownloaded) {
+        if (pswave_img_gif_.has_value()) {
+            decodeGifImage(pswave_img_gif_->data(), pswave_img_gif_->size());
+        } else {
+            printf("pswave_img_gif_ is empty!\n");
+            event_group_.setBits(KyoshinMonitorEvent::Error);
+        }
+        event_group_.clearBits(KyoshinMonitorEvent::PsWaveImageDownloaded);
+        event_group_.setBits(KyoshinMonitorEvent::ImageRendered);
+        return;
+    }
+    if (event & KyoshinMonitorEvent::PsWaveImageSkip) {
+        event_group_.clearBits(KyoshinMonitorEvent::PsWaveImageSkip);
+        event_group_.setBits(KyoshinMonitorEvent::ImageRendered);
+        return;
+    }
+    if (event & KyoshinMonitorEvent::Worker2Stop) {
         event_group_.setBits(KyoshinMonitorEvent::Worker2End);
-        break;
-    default:
-        printf("FATAL ERROR: Invalid event in worker2\n");
-        event_group_.setBits(KyoshinMonitorEvent::Worker2End);
-        break;
+        return;
     }
 }

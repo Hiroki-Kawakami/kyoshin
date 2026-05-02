@@ -20,11 +20,16 @@ enum class KyoshinMonitorEvent : uint32_t {
     Worker2End              = 1 << 9,
     Error                   = 1 << 10,
 };
-inline KyoshinMonitorEvent operator|(KyoshinMonitorEvent a, KyoshinMonitorEvent b) {
-    return static_cast<KyoshinMonitorEvent>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
+struct KyoshinMonitorEventBits {
+    uint32_t value;
+    operator bool() const { return value != 0; }
+    operator KyoshinMonitorEvent() const { return static_cast<KyoshinMonitorEvent>(value); }
+};
+inline KyoshinMonitorEventBits operator|(KyoshinMonitorEvent a, KyoshinMonitorEvent b) {
+    return {static_cast<uint32_t>(a) | static_cast<uint32_t>(b)};
 }
-inline KyoshinMonitorEvent operator&(KyoshinMonitorEvent a, KyoshinMonitorEvent b) {
-    return static_cast<KyoshinMonitorEvent>(static_cast<uint32_t>(a) & static_cast<uint32_t>(b));
+inline KyoshinMonitorEventBits operator&(KyoshinMonitorEvent a, KyoshinMonitorEvent b) {
+    return {static_cast<uint32_t>(a) & static_cast<uint32_t>(b)};
 }
 
 class KyoshinMonitorCallback {
@@ -52,6 +57,7 @@ private:
     EventGroup<KyoshinMonitorEvent> event_group_{};
     time_t latest_time_{-1};
     std::optional<std::vector<uint8_t>> realtime_img_gif_{std::nullopt};
+    std::optional<std::vector<uint8_t>> pswave_img_gif_{std::nullopt};
     KyoshinMonitorCallback *callback_;
 
     const MapRegionConfig &regionConfig() const {
@@ -68,7 +74,8 @@ private:
     time_t getLatestTime();
     time_t updateLatestTime();
     bool downloadRealtimeImage(time_t time);
-    void decodeRealtimeImage();
+    bool downloadPsWaveImage(time_t time);
+    void decodeGifImage(uint8_t *data, size_t size);
 
     void worker1();
     void worker2();
