@@ -164,6 +164,7 @@ void KyoshinMonitor::worker1() {
     if (downloadRealtimeImage(time)) {
         downloadPsWaveImage(time);
     }
+    http_client_.close();
 
     event = event_group_.waitBits(KyoshinMonitorEvent::ImageRendered | KyoshinMonitorEvent::Error);
     if (event & KyoshinMonitorEvent::Error) return;

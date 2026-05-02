@@ -42,6 +42,7 @@ void NetworkManager::init() {
         return;
     }
     wifi_sta = new espp::WifiSta(config);
+    esp_wifi_set_ps(WIFI_PS_NONE);
 }
 
 bool NetworkManager::isConnected() {

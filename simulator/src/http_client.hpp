@@ -18,6 +18,8 @@ public:
     // Synchronous GET. max_size limits the response body to avoid OOM (default 256KB).
     Response get(const std::string& path, size_t max_size = 256 * 1024) const;
 
+    void close() {}
+
 private:
     std::string base_url_;
 };
