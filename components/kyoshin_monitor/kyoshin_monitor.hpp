@@ -15,11 +15,12 @@ enum class KyoshinMonitorEvent : uint32_t {
     PsWaveImageDownloaded   = 1 << 3,
     PsWaveImageSkip         = 1 << 4,
     ImageRendered           = 1 << 5,
-    Worker1Stop             = 1 << 6,
-    Worker2Stop             = 1 << 7,
-    Worker1End              = 1 << 8,
-    Worker2End              = 1 << 9,
-    Error                   = 1 << 10,
+    DownloadBaseMap         = 1 << 6,
+    Worker1Stop             = 1 << 7,
+    Worker2Stop             = 1 << 8,
+    Worker1End              = 1 << 9,
+    Worker2End              = 1 << 10,
+    Error                   = 1 << 11,
 };
 struct KyoshinMonitorEventBits {
     uint32_t value;
@@ -35,7 +36,8 @@ inline KyoshinMonitorEventBits operator&(KyoshinMonitorEvent a, KyoshinMonitorEv
 
 class KyoshinMonitorCallback {
 public:
-    virtual void onData(uint16_t *img) = 0;
+    virtual void onData(uint16_t *img) {};
+    virtual void onBaseMapReady(bool result) {};
 };
 
 class KyoshinMonitor {
@@ -45,7 +47,10 @@ public:
     void startUpdateTimer();
     void stopUpdateTimer();
     void setCallback(KyoshinMonitorCallback *callback) { callback_ = callback; }
+    bool loadBaseMapImage(bool download = false);
+    MapRegion getMapRegion() const { return map_region_; }
     const KyoshinForecast &getForecast() const { return forecast_; }
+    uint16_t *copyBaseMapImage();
 
 private:
     MapRegion map_region_{MapRegion::Japan};
@@ -77,6 +82,7 @@ private:
     time_t getLatestTime();
     time_t updateLatestTime();
     std::string downloadForecast(time_t time);
+    bool downloadBaseMapImage();
     bool downloadRealtimeImage(time_t time);
     bool downloadPsWaveImage(time_t time);
     void decodeGifImage(uint8_t *data, size_t size);

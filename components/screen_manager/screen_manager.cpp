@@ -20,8 +20,8 @@ void ScreenManager::push(std::unique_ptr<Screen> screen) {
     }
     stack_.push_back(std::move(screen));
     stack_.back()->onEnter();
-    stack_.back()->onAppear();
     lv_screen_load(stack_.back()->root_);
+    stack_.back()->onAppear();
 }
 
 void ScreenManager::pop() {
@@ -32,8 +32,8 @@ void ScreenManager::pop() {
     stack_.pop_back();
 
     switch_theme(stack_.back()->theme());
-    stack_.back()->onAppear();
     lv_screen_load(stack_.back()->root_);
+    stack_.back()->onAppear();
 }
 
 Screen *ScreenManager::current_screen() {

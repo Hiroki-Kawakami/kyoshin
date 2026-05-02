@@ -1,6 +1,8 @@
 #include <cstdio>
+#include <cstring>
 #include "kyoshin_monitor.hpp"
 #include "json_parser.hpp"
+#include "flash_image.hpp"
 
 KyoshinMonitor::KyoshinMonitor() {
     for (int i = 0; i < image_buffers_.size(); i++) {
@@ -15,12 +17,12 @@ KyoshinMonitor::KyoshinMonitor() {
             this->worker1();
             event_group_.clearBits(KyoshinMonitorEvent::Update | KyoshinMonitorEvent::Error);
         }
-    }, 2, 16 * 1024, 0);
+    }, 2, 24 * 1024, 0);
     kyoshin_port_task_create("kyoshin2", [this](){
         while (!event_group_.contains(KyoshinMonitorEvent::Worker2End)) {
             this->worker2();
         }
-    }, 2, 16 * 1024, 1);
+    }, 2, 24 * 1024, 1);
 }
 
 KyoshinMonitor::~KyoshinMonitor() {
@@ -32,6 +34,31 @@ void KyoshinMonitor::startUpdateTimer() {
 }
 void KyoshinMonitor::stopUpdateTimer() {
     kyoshin_port_timer_stop(timer_);
+}
+
+bool KyoshinMonitor::loadBaseMapImage(bool download) {
+    flash_image.selectImage(getMapRegion().value);
+    bool exists = flash_image.exists();
+    if (!exists && download) {
+        event_group_.setBits(KyoshinMonitorEvent::DownloadBaseMap);
+    }
+    return exists;
+}
+
+uint16_t *KyoshinMonitor::copyBaseMapImage() {
+    memcpy(imageBuffer(), flash_image.getData(), KYOSHIN_SERVER_CONFIG.imgWidth * KYOSHIN_SERVER_CONFIG.imgHeight * 2);
+    return imageBuffer();
+}
+
+bool KyoshinMonitor::downloadBaseMapImage() {
+    auto response = http_client_.get(regionConfig().baseMapUrl);
+    if (!response.ok()) return false;
+    auto err = gif_decoder_.decode(response.data.data(), response.data.size(), imageBuffer());
+    if (err != GifDecoder::Error::None) {
+        printf("BaseMap decode failed: %d\n", static_cast<int>(err));
+        return false;
+    }
+    return flash_image.writeImage(imageBuffer());
 }
 
 time_t KyoshinMonitor::getLatestTime() {
@@ -133,9 +160,7 @@ void KyoshinMonitor::worker1() {
     if (forecast_json.empty()) return;
     forecast_.update(forecast_json.c_str());
 
-    for (int i = 0; i < KYOSHIN_SERVER_CONFIG.imgWidth * KYOSHIN_SERVER_CONFIG.imgHeight; i++) {
-        imageBuffer()[i] = 0xffff;
-    }
+    copyBaseMapImage();
     if (downloadRealtimeImage(time)) {
         downloadPsWaveImage(time);
     }
@@ -151,6 +176,7 @@ void KyoshinMonitor::worker2() {
         KyoshinMonitorEvent::RealtimeImageDownloaded |
         KyoshinMonitorEvent::PsWaveImageDownloaded |
         KyoshinMonitorEvent::PsWaveImageSkip |
+        KyoshinMonitorEvent::DownloadBaseMap |
         KyoshinMonitorEvent::Worker2Stop);
     if (event & KyoshinMonitorEvent::RealtimeImageDownloaded) {
         if (realtime_img_gif_.has_value()) {
@@ -176,6 +202,12 @@ void KyoshinMonitor::worker2() {
     if (event & KyoshinMonitorEvent::PsWaveImageSkip) {
         event_group_.clearBits(KyoshinMonitorEvent::PsWaveImageSkip);
         event_group_.setBits(KyoshinMonitorEvent::ImageRendered);
+        return;
+    }
+    if (event & KyoshinMonitorEvent::DownloadBaseMap) {
+        auto result = downloadBaseMapImage();
+        if (callback_) callback_->onBaseMapReady(result);
+        event_group_.clearBits(KyoshinMonitorEvent::DownloadBaseMap);
         return;
     }
     if (event & KyoshinMonitorEvent::Worker2Stop) {
