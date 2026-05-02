@@ -11,4 +11,6 @@ public:
 
 private:
     lv_obj_t *image_;
+
+    void update(const KyoshinForecast &forecast, const lv_image_dsc_t *img);
 };

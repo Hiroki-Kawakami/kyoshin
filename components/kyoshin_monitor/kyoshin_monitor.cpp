@@ -1,5 +1,6 @@
-#include "kyoshin_monitor.hpp"
 #include <cstdio>
+#include "kyoshin_monitor.hpp"
+#include "json_parser.hpp"
 
 KyoshinMonitor::KyoshinMonitor() {
     for (int i = 0; i < image_buffers_.size(); i++) {
@@ -12,6 +13,7 @@ KyoshinMonitor::KyoshinMonitor() {
     kyoshin_port_task_create("kyoshin1", [this](){
         while (!event_group_.contains(KyoshinMonitorEvent::Worker1End)) {
             this->worker1();
+            event_group_.clearBits(KyoshinMonitorEvent::Update | KyoshinMonitorEvent::Error);
         }
     }, 2, 16 * 1024, 0);
     kyoshin_port_task_create("kyoshin2", [this](){
@@ -39,18 +41,17 @@ time_t KyoshinMonitor::getLatestTime() {
         return -1;
     }
 
-    auto body = response.as_string();
-    cJSON *json = cJSON_Parse(body.c_str());
-    if (!json) {
+    auto json = JSONValue(response.as_string());
+    if (json.isNull()) {
         printf("JSON parse failed!\n");
         return -1;
     }
 
     time_t result = -1;
-    cJSON *latest_time = cJSON_GetObjectItem(json, "latest_time");
-    if (cJSON_IsString(latest_time) && latest_time->valuestring) {
+    auto latest_time = json["latest_time"];
+    if (latest_time.isString()) {
         struct tm t = {};
-        if (sscanf(latest_time->valuestring, "%d/%d/%d %d:%d:%d",
+        if (sscanf(latest_time.stringValue().c_str(), "%d/%d/%d %d:%d:%d",
                    &t.tm_year, &t.tm_mon, &t.tm_mday,
                    &t.tm_hour, &t.tm_min, &t.tm_sec) == 6) {
             t.tm_year -= 1900;
@@ -59,8 +60,6 @@ time_t KyoshinMonitor::getLatestTime() {
             result = mktime(&t);
         }
     }
-
-    cJSON_Delete(json);
     return result;
 }
 
@@ -79,6 +78,13 @@ static std::string strftime(time_t time, const char *format) {
     localtime_r(&time, &timeinfo);
     strftime(buf, sizeof(buf), format, &timeinfo);
     return std::string(buf);
+}
+
+std::string KyoshinMonitor::downloadForecast(time_t time) {
+    auto path = strftime(time, KYOSHIN_SERVER_CONFIG.forecastUrlFormat);
+    auto response = http_client_.get(path);
+    if (!response.ok()) return "";
+    return response.as_string();
 }
 
 bool KyoshinMonitor::downloadRealtimeImage(time_t time) {
@@ -121,20 +127,24 @@ void KyoshinMonitor::worker1() {
     }
 
     auto time = updateLatestTime();
-    if (time < 0) goto end;
+    if (time < 0) return;
+
+    auto forecast_json = downloadForecast(time);
+    if (forecast_json.empty()) return;
+    forecast_.update(forecast_json.c_str());
 
     for (int i = 0; i < KYOSHIN_SERVER_CONFIG.imgWidth * KYOSHIN_SERVER_CONFIG.imgHeight; i++) {
         imageBuffer()[i] = 0xffff;
     }
-    if (!downloadRealtimeImage(time)) goto end;
-    downloadPsWaveImage(time);
+    if (downloadRealtimeImage(time)) {
+        downloadPsWaveImage(time);
+    }
 
-    event = event_group_.waitBitsAndClear(KyoshinMonitorEvent::ImageRendered | KyoshinMonitorEvent::Error);
-    if (event & KyoshinMonitorEvent::Error) goto end;
+    event = event_group_.waitBits(KyoshinMonitorEvent::ImageRendered | KyoshinMonitorEvent::Error);
+    if (event & KyoshinMonitorEvent::Error) return;
+    event_group_.clearBits(KyoshinMonitorEvent::ImageRendered);
     if (callback_) callback_->onData(imageBuffer());
     image_buffer_idx_ = (image_buffer_idx_ + 1) % image_buffers_.size();
-end:
-    event_group_.clearBits(KyoshinMonitorEvent::Update | KyoshinMonitorEvent::Error);
 }
 void KyoshinMonitor::worker2() {
     auto event = event_group_.waitBits(

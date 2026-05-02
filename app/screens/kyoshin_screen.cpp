@@ -35,8 +35,21 @@ void KyoshinScreen::onData(uint16_t *data) {
         img.header.w = 320;
         img.header.h = 240;
         img.data_size = 320 * 240 * 2;
-        img.data = (const uint8_t*)data;
-        lv_image_set_src(image_, &img);
+        if (data) {
+            img.data = (const uint8_t*)data;
+            update(kyoshin_monitor->getForecast(), &img);
+        } else {
+            update(kyoshin_monitor->getForecast(), nullptr);
+        }
     });
     lv_unlock();
+}
+
+void KyoshinScreen::update(const KyoshinForecast &forecast, const lv_image_dsc_t *img) {
+    if (img) {
+        lv_image_set_src(image_, img);
+    }
+    if (!forecast.empty()) {
+        printf("forecast: %s\n", forecast.reportNumString().c_str());
+    }
 }

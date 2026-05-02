@@ -3,6 +3,7 @@
 #include <vector>
 #include <time.h>
 #include "kyoshin_monitor_config.hpp"
+#include "kyoshin_forecast.hpp"
 #include "kyoshin_port.hpp"
 #include "http_client.hpp"
 #include "gif_decoder.hpp"
@@ -44,6 +45,7 @@ public:
     void startUpdateTimer();
     void stopUpdateTimer();
     void setCallback(KyoshinMonitorCallback *callback) { callback_ = callback; }
+    const KyoshinForecast &getForecast() const { return forecast_; }
 
 private:
     MapRegion map_region_{MapRegion::Japan};
@@ -56,6 +58,7 @@ private:
     kyoshin_port_timer_t *timer_{nullptr};
     EventGroup<KyoshinMonitorEvent> event_group_{};
     time_t latest_time_{-1};
+    KyoshinForecast forecast_;
     std::optional<std::vector<uint8_t>> realtime_img_gif_{std::nullopt};
     std::optional<std::vector<uint8_t>> pswave_img_gif_{std::nullopt};
     KyoshinMonitorCallback *callback_;
@@ -73,6 +76,7 @@ private:
 
     time_t getLatestTime();
     time_t updateLatestTime();
+    std::string downloadForecast(time_t time);
     bool downloadRealtimeImage(time_t time);
     bool downloadPsWaveImage(time_t time);
     void decodeGifImage(uint8_t *data, size_t size);
