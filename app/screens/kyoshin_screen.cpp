@@ -8,6 +8,7 @@ void KyoshinScreen::build() {
     if (!kyoshin_monitor) {
         kyoshin_monitor = new KyoshinMonitor();
     }
+    image_ = lv_image_create(root_);
 }
 
 void KyoshinScreen::onAppear() {
@@ -117,11 +118,9 @@ void KyoshinScreen::ring(const KyoshinForecast &forecast) {
 
 void KyoshinScreen::buildScreenLayout(ScreenLayout screen_layout) {
     if (screen_layout_ == screen_layout) return;
-    lv_obj_clean(root_);
 
     if (screen_layout == ScreenLayout::ZoomHorizontal ||
         screen_layout == ScreenLayout::ZoomVertical) {
-        image_ = lv_image_create(root_);
         lv_obj_set_size(image_, 320, 240);
         if (screen_layout == ScreenLayout::ZoomVertical) {
             lv_img_set_angle(image_, 900);
@@ -129,29 +128,38 @@ void KyoshinScreen::buildScreenLayout(ScreenLayout screen_layout) {
             lv_img_set_angle(image_, 0);
         }
 
-        forecast_ = nullptr;
-        forecast_header_ = nullptr;
+        if (forecast_) {
+            lv_obj_delete(forecast_);
+            forecast_ = nullptr;
+        }
+        if (forecast_header_) {
+            lv_obj_delete(forecast_header_);
+            forecast_header_ = nullptr;
+        }
     } else {
-        image_ = lv_image_create(root_);
         lv_obj_set_size(image_, 212, 240);
+        lv_img_set_angle(image_, 0);
 
-        forecast_ = lv_obj_create(root_);
-        lv_obj_remove_style_all(forecast_);
-        lv_obj_set_size(forecast_, 108, 240);
-        lv_obj_align(forecast_, LV_ALIGN_TOP_RIGHT, 0, 0);
-        lv_obj_set_style_bg_color(forecast_, lv_color_white(), 0);
-        lv_obj_set_style_bg_opa(forecast_, LV_OPA_COVER, 0);
-        lv_obj_set_style_border_side(forecast_, LV_BORDER_SIDE_LEFT, 0);
-        lv_obj_set_style_border_width(forecast_, 4, 0);
-        lv_obj_set_style_border_color(forecast_, lv_color_hex(0xd3d3d3), 0);
-        lv_obj_set_style_border_opa(forecast_, LV_OPA_COVER, 0);
-
-        forecast_header_ = lv_obj_create(root_);
-        lv_obj_remove_style_all(forecast_header_);
-        lv_obj_set_size(forecast_header_, 104, 88);
-        lv_obj_align(forecast_header_, LV_ALIGN_TOP_RIGHT, 0, 0);
-        lv_obj_set_style_bg_color(forecast_header_, lv_color_hex(0xd3d3d3), 0);
-        lv_obj_set_style_bg_opa(forecast_header_, LV_OPA_COVER, 0);
+        if (!forecast_) {
+            forecast_ = lv_obj_create(root_);
+            lv_obj_remove_style_all(forecast_);
+            lv_obj_set_size(forecast_, 108, 240);
+            lv_obj_align(forecast_, LV_ALIGN_TOP_RIGHT, 0, 0);
+            lv_obj_set_style_bg_color(forecast_, lv_color_white(), 0);
+            lv_obj_set_style_bg_opa(forecast_, LV_OPA_COVER, 0);
+            lv_obj_set_style_border_side(forecast_, LV_BORDER_SIDE_LEFT, 0);
+            lv_obj_set_style_border_width(forecast_, 4, 0);
+            lv_obj_set_style_border_color(forecast_, lv_color_hex(0xd3d3d3), 0);
+            lv_obj_set_style_border_opa(forecast_, LV_OPA_COVER, 0);
+        }
+        if (!forecast_header_) {
+            forecast_header_ = lv_obj_create(root_);
+            lv_obj_remove_style_all(forecast_header_);
+            lv_obj_set_size(forecast_header_, 104, 88);
+            lv_obj_align(forecast_header_, LV_ALIGN_TOP_RIGHT, 0, 0);
+            lv_obj_set_style_bg_color(forecast_header_, lv_color_hex(0xd3d3d3), 0);
+            lv_obj_set_style_bg_opa(forecast_header_, LV_OPA_COVER, 0);
+        }
     }
 
     screen_layout_ = screen_layout;
