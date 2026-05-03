@@ -9,18 +9,19 @@
 #include "gif_decoder.hpp"
 
 enum class KyoshinMonitorEvent : uint32_t {
-    Update                  = 1 << 0,
-    StartImageRenderer      = 1 << 1,
-    RealtimeImageDownloaded = 1 << 2,
-    PsWaveImageDownloaded   = 1 << 3,
-    PsWaveImageSkip         = 1 << 4,
-    ImageRendered           = 1 << 5,
-    DownloadBaseMap         = 1 << 6,
-    Worker1Stop             = 1 << 7,
-    Worker2Stop             = 1 << 8,
-    Worker1End              = 1 << 9,
-    Worker2End              = 1 << 10,
-    Error                   = 1 << 11,
+    Update                  = 1u << 0,
+    UpdateImage             = 1u << 1,
+    StartImageRenderer      = 1u << 2,
+    RealtimeImageDownloaded = 1u << 3,
+    PsWaveImageDownloaded   = 1u << 4,
+    PsWaveImageSkip         = 1u << 5,
+    ImageRendered           = 1u << 6,
+    DownloadBaseMap         = 1u << 7,
+    Worker1Active           = 1u << 8,
+    Worker2Active           = 1u << 9,
+    Worker1Stop             = 1u << 10,
+    Worker2Stop             = 1u << 11,
+    Error                   = 1u << 31,
 };
 struct KyoshinMonitorEventBits {
     uint32_t value;
@@ -51,6 +52,8 @@ public:
     MapRegion getMapRegion() const { return map_region_; }
     const KyoshinForecast &getForecast() const { return forecast_; }
     uint16_t *copyBaseMapImage();
+    void setMapRegion(MapRegion region);
+    void updateImage();
 
 private:
     MapRegion map_region_{MapRegion::Japan};
@@ -87,6 +90,8 @@ private:
     bool downloadPsWaveImage(time_t time);
     void decodeGifImage(uint8_t *data, size_t size);
 
+    void startWorkers();
+    void stopWorkers();
     void worker1();
     void worker2();
 };

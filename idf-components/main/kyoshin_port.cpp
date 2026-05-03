@@ -38,6 +38,9 @@ void kyoshin_port_timer_start_periodic(kyoshin_port_timer_t *timer, int period_m
 void kyoshin_port_timer_stop(kyoshin_port_timer_t *timer) {
     esp_timer_stop(timer->handle);
 }
+void kyoshin_port_timer_restart(kyoshin_port_timer_t *timer, int timeout_ms) {
+    esp_timer_restart(timer->handle, timeout_ms * 1000);
+}
 void kyoshin_port_timer_delete(kyoshin_port_timer_t *timer) {
     esp_timer_delete(timer->handle);
     delete timer;

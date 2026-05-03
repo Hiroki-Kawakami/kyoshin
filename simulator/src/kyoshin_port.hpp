@@ -37,6 +37,7 @@ struct kyoshin_port_timer_t {
     pthread_mutex_t mutex;
     pthread_cond_t cond;
     bool running = false;
+    bool restarted = false;
     int period_ms = 0;
 };
 static void *kyoshin_port_timer_thread(void *arg) {
@@ -51,8 +52,9 @@ static void *kyoshin_port_timer_thread(void *arg) {
             ts.tv_sec++;
             ts.tv_nsec -= 1'000'000'000L;
         }
+        timer->restarted = false;
         pthread_cond_timedwait(&timer->cond, &timer->mutex, &ts);
-        if (timer->running) {
+        if (timer->running && !timer->restarted) {
             timer->fn();
         }
     }
@@ -70,6 +72,13 @@ inline void kyoshin_port_timer_start_periodic(kyoshin_port_timer_t *timer, int p
     timer->period_ms = period_ms;
     timer->running = true;
     pthread_create(&timer->thread, nullptr, kyoshin_port_timer_thread, timer);
+}
+inline void kyoshin_port_timer_restart(kyoshin_port_timer_t *timer, int timeout_ms) {
+    pthread_mutex_lock(&timer->mutex);
+    timer->period_ms = timeout_ms;
+    timer->restarted = true;
+    pthread_cond_signal(&timer->cond);
+    pthread_mutex_unlock(&timer->mutex);
 }
 inline void kyoshin_port_timer_stop(kyoshin_port_timer_t *timer) {
     pthread_mutex_lock(&timer->mutex);

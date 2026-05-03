@@ -30,4 +30,5 @@ private:
     void screenClicked();
     void openMenu();
     void closeMenu();
+    void setRegion(MapRegion region);
 };

@@ -28,6 +28,21 @@ void MapLoadScreen::onDisappear() {
 void MapLoadScreen::onBaseMapReady(bool result) {
     printf("MapLoadScreen::onBaseMapReady: %d\n", result);
     lv_lock();
-    lv_async_call([](void*){ screen_manager.pop(); }, nullptr);
+    lv_async_call([this, result](){
+        if (result) screen_manager.pop();
+        else buildErrorScreen();
+    });
     lv_unlock();
+}
+
+void MapLoadScreen::buildErrorScreen() {
+    lv_obj_clean(root_);
+    auto label = lv_label_create(root_);
+    lv_label_set_text(label, "Failed to download Base Map Image");
+
+    auto button = lv_button_create(root_);
+    auto button_label = lv_label_create(button);
+    lv_label_set_text(button_label, "Retry");
+    lv_obj_center(button_label);
+    lv_obj_add_event_fn(button, LV_EVENT_CLICKED, [](lv_event_t*){ screen_manager.pop(); });
 }

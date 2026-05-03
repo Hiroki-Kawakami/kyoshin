@@ -12,4 +12,6 @@ public:
 
 private:
     lv_timer_t *timer_;
+
+    void buildErrorScreen();
 };

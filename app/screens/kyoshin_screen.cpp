@@ -277,6 +277,11 @@ void KyoshinScreen::openMenu() {
     lv_obj_set_width(region_dd, 125);
     lv_obj_align(region_dd, LV_ALIGN_TOP_LEFT, 4, 4);
     lv_dropdown_set_options(region_dd, "全国\n能登半島");
+    lv_obj_add_event_fn(region_dd, LV_EVENT_VALUE_CHANGED, [this, region_dd](lv_event_t*){
+        auto i = lv_dropdown_get_selected(region_dd);
+        setRegion(static_cast<MapRegion>(i));
+    });
+
     auto borehole_dd = create_dropdown(menu_);
     lv_obj_set_width(borehole_dd, 95);
     lv_obj_align(borehole_dd, LV_ALIGN_TOP_LEFT, 133, 4);
@@ -315,4 +320,14 @@ void KyoshinScreen::closeMenu() {
         lv_obj_delete(menu_);
         menu_ = nullptr;
     }
+}
+
+void KyoshinScreen::setRegion(MapRegion region) {
+    kyoshin_monitor->setMapRegion(region);
+    if (!kyoshin_monitor->loadBaseMapImage()) {
+        screen_manager.push(std::make_unique<MapLoadScreen>());
+        return;
+    }
+    kyoshin_monitor->startUpdateTimer();
+    kyoshin_monitor->updateImage();
 }

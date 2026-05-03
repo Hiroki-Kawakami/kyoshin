@@ -17,6 +17,7 @@ struct kyoshin_port_timer_t {
 kyoshin_port_timer_t *kyoshin_port_timer_create(const char *name, std::function<void()> fn);
 void kyoshin_port_timer_start_periodic(kyoshin_port_timer_t *timer, int period_ms);
 void kyoshin_port_timer_stop(kyoshin_port_timer_t *timer);
+void kyoshin_port_timer_restart(kyoshin_port_timer_t *timer, int timeout_ms);
 void kyoshin_port_timer_delete(kyoshin_port_timer_t *timer);
 
 // MARK: EventGroup
