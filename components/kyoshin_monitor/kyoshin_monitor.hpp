@@ -21,7 +21,7 @@ enum class KyoshinMonitorEvent : uint32_t {
     Worker2Active           = 1u << 9,
     Worker1Stop             = 1u << 10,
     Worker2Stop             = 1u << 11,
-    Error                   = 1u << 31,
+    Error                   = 1u << 12,
 };
 struct KyoshinMonitorEventBits {
     uint32_t value;

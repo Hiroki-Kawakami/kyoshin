@@ -8,6 +8,7 @@ void kyoshin_port_task_create(const char *name, std::function<void()> fn, int pr
             auto func = static_cast<std::function<void()>*>(arg);
             (*func)();
             delete func;
+            vTaskDelete(NULL);
         },
         name,
         stack_size / sizeof(size_t),
