@@ -27,5 +27,7 @@ void MapLoadScreen::onDisappear() {
 
 void MapLoadScreen::onBaseMapReady(bool result) {
     printf("MapLoadScreen::onBaseMapReady: %d\n", result);
-    screen_manager.pop();
+    lv_lock();
+    lv_async_call([](void*){ screen_manager.pop(); }, nullptr);
+    lv_unlock();
 }

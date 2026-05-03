@@ -2,18 +2,12 @@
 #include "kyoshin_app.hpp"
 #include "bilinear.hpp"
 #include "map_load_screen.hpp"
+#include "resources/resources.h"
 
 void KyoshinScreen::build() {
     if (!kyoshin_monitor) {
         kyoshin_monitor = new KyoshinMonitor();
     }
-    auto label = lv_label_create(root_);
-    lv_obj_center(label);
-    lv_label_set_text(label, "Kyoshin Monitor");
-
-    image_ = lv_image_create(root_);
-    lv_obj_center(image_);
-    lv_obj_set_size(image_, 320, 240);
 }
 
 void KyoshinScreen::onAppear() {
@@ -23,16 +17,21 @@ void KyoshinScreen::onAppear() {
         return;
     }
 
+    uint16_t width, height;
+    auto screen_layout = preferredScreenLayout();
+    buildScreenLayout(screen_layout);
+    preferredImageSize(screen_layout, &width, &height);
+
     auto data = kyoshin_monitor->copyBaseMapImage();
     auto input = BilinearInput{ KYOSHIN_SERVER_CONFIG.imgWidth, KYOSHIN_SERVER_CONFIG.imgHeight, data };
-    auto output = BilinearOutput{ 320, 240, data };
+    auto output = BilinearOutput{ width, height, data };
     bilinear_resize(&input, &output);
 
     img_dsc_.header.cf = LV_COLOR_FORMAT_RGB565;
     img_dsc_.header.magic = LV_IMAGE_HEADER_MAGIC;
-    img_dsc_.header.w = 320;
-    img_dsc_.header.h = 240;
-    img_dsc_.data_size = 320 * 240 * 2;
+    img_dsc_.header.w = width;
+    img_dsc_.header.h = height;
+    img_dsc_.data_size = width * height * 2;
     img_dsc_.data = (const uint8_t*)data;
     lv_image_set_src(image_, &img_dsc_);
 
@@ -44,26 +43,174 @@ void KyoshinScreen::onDisappear() {
 }
 
 void KyoshinScreen::onData(uint16_t *data) {
-    auto input = BilinearInput{ KYOSHIN_SERVER_CONFIG.imgWidth, KYOSHIN_SERVER_CONFIG.imgHeight, data };
-    auto output = BilinearOutput{ 320, 240, data };
-    bilinear_resize(&input, &output);
+    uint16_t width, height;
+    ScreenLayout screen_layout = preferredScreenLayout();
+    preferredImageSize(screen_layout, &width, &height);
+
+    if (data) {
+        auto input = BilinearInput{ KYOSHIN_SERVER_CONFIG.imgWidth, KYOSHIN_SERVER_CONFIG.imgHeight, data };
+        auto output = BilinearOutput{ width, height, data };
+        bilinear_resize(&input, &output);
+    }
     lv_lock();
-    lv_async_call([this, data](){
+    lv_async_call([this, screen_layout, width, height, data](){
         if (data) {
+            img_dsc_.header.w = width;
+            img_dsc_.header.h = height;
+            img_dsc_.data_size = width * height * 2;
             img_dsc_.data = (const uint8_t*)data;
-            update(kyoshin_monitor->getForecast(), &img_dsc_);
+            update(screen_layout, &img_dsc_);
         } else {
-            update(kyoshin_monitor->getForecast(), nullptr);
+            update(screen_layout, nullptr);
         }
     });
     lv_unlock();
 }
 
-void KyoshinScreen::update(const KyoshinForecast &forecast, const lv_image_dsc_t *img) {
-    if (img) {
-        lv_image_set_src(image_, img);
+ScreenLayout KyoshinScreen::preferredScreenLayout() const {
+    auto screen_layout = kyoshin_settings.getScreenLayout();
+    if (screen_layout == ScreenLayout::AutoHorizontal) {
+        if (kyoshin_monitor->getForecast().empty()) {
+            return ScreenLayout::ZoomHorizontal;
+        } else {
+            return ScreenLayout::HorizontalInfo;
+        }
+    } else {
+        return screen_layout;
     }
-    if (!forecast.empty()) {
-        printf("forecast: %s\n", forecast.reportNumString().c_str());
+}
+
+void KyoshinScreen::preferredImageSize(ScreenLayout layout, uint16_t *width, uint16_t *height) {
+    switch (layout) {
+    case ScreenLayout::ZoomHorizontal:
+        *width = 320;
+        *height = 240;
+        break;
+    case ScreenLayout::ZoomVertical:
+        *width = 240;
+        *height = 320;
+        break;
+    default:
+        *width = 212;
+        *height = 240;
+        break;
+    }
+}
+
+void KyoshinScreen::buildScreenLayout(ScreenLayout screen_layout) {
+    if (screen_layout_ == screen_layout) return;
+    lv_obj_clean(root_);
+
+    if (screen_layout == ScreenLayout::ZoomHorizontal ||
+        screen_layout == ScreenLayout::ZoomVertical) {
+        image_ = lv_image_create(root_);
+        lv_obj_set_size(image_, 320, 240);
+        if (screen_layout == ScreenLayout::ZoomVertical) {
+            lv_img_set_angle(image_, 900);
+        } else {
+            lv_img_set_angle(image_, 0);
+        }
+
+        forecast_ = nullptr;
+        forecast_header_ = nullptr;
+    } else {
+        image_ = lv_image_create(root_);
+        lv_obj_set_size(image_, 212, 240);
+
+        forecast_ = lv_obj_create(root_);
+        lv_obj_remove_style_all(forecast_);
+        lv_obj_set_size(forecast_, 108, 240);
+        lv_obj_align(forecast_, LV_ALIGN_TOP_RIGHT, 0, 0);
+        lv_obj_set_style_bg_color(forecast_, lv_color_white(), 0);
+        lv_obj_set_style_bg_opa(forecast_, LV_OPA_COVER, 0);
+        lv_obj_set_style_border_side(forecast_, LV_BORDER_SIDE_LEFT, 0);
+        lv_obj_set_style_border_width(forecast_, 4, 0);
+        lv_obj_set_style_border_color(forecast_, lv_color_hex(0xd3d3d3), 0);
+        lv_obj_set_style_border_opa(forecast_, LV_OPA_COVER, 0);
+
+        forecast_header_ = lv_obj_create(root_);
+        lv_obj_remove_style_all(forecast_header_);
+        lv_obj_set_size(forecast_header_, 104, 88);
+        lv_obj_align(forecast_header_, LV_ALIGN_TOP_RIGHT, 0, 0);
+        lv_obj_set_style_bg_color(forecast_header_, lv_color_hex(0xd3d3d3), 0);
+        lv_obj_set_style_bg_opa(forecast_header_, LV_OPA_COVER, 0);
+    }
+
+    screen_layout_ = screen_layout;
+}
+
+void KyoshinScreen::updateForecast(const KyoshinForecast &forecast) {
+    if (forecast_) {
+        lv_obj_clean(forecast_);
+        lv_obj_set_style_border_color(forecast_, lv_color_hex(forecast.color()), 0);
+
+        if (!forecast.empty()) {
+            auto magnitude = lv_label_create(forecast_);
+            lv_obj_align(magnitude, LV_ALIGN_TOP_MID, 0, 96);
+            lv_label_set_text(magnitude, ("M" + forecast.magnitude).c_str());
+            lv_obj_set_style_text_font(magnitude, R.font.ipa_24, 0);
+            lv_obj_set_style_text_color(magnitude, lv_color_black(), 0);
+
+            auto depth_title = lv_label_create(forecast_);
+            lv_obj_align(depth_title, LV_ALIGN_TOP_LEFT, 4, 128);
+            lv_label_set_text(depth_title, "深さ");
+            lv_obj_set_style_text_font(depth_title, R.font.ipa_16, 0);
+            lv_obj_set_style_text_color(depth_title, lv_color_black(), 0);
+
+            auto depth = lv_label_create(forecast_);
+            lv_obj_align(depth, LV_ALIGN_TOP_MID, 0, 144);
+            lv_label_set_text(depth, forecast.depth.c_str());
+            lv_obj_set_style_text_font(depth, R.font.ipa_24, 0);
+            lv_obj_set_style_text_color(depth, lv_color_black(), 0);
+
+            auto region = lv_label_create(forecast_);
+            lv_obj_align(region, LV_ALIGN_TOP_LEFT, 4, 176);
+            lv_obj_set_width(region, 96);
+            lv_label_set_text(region, forecast.regionName.c_str());
+            lv_obj_set_style_text_font(region, R.font.ipa_16, 0);
+            lv_obj_set_style_text_color(region, lv_color_black(), 0);
+            lv_label_set_long_mode(region, LV_LABEL_LONG_WRAP);
+
+            auto report_num = lv_label_create(forecast_);
+            lv_obj_align(report_num, LV_ALIGN_BOTTOM_RIGHT, -4, -2);
+            lv_label_set_text(report_num, forecast.reportNumString().c_str());
+            lv_obj_set_style_text_font(report_num, R.font.ipa_16, 0);
+            lv_obj_set_style_text_color(report_num, lv_color_black(), 0);
+        }
+    }
+    if (forecast_header_) {
+        lv_obj_clean(forecast_header_);
+        lv_obj_set_style_bg_color(forecast_header_, lv_color_hex(forecast.color()), 0);
+
+        if (!forecast.empty()) {
+            auto alert_label = lv_label_create(forecast_header_);
+            lv_obj_align(alert_label, LV_ALIGN_TOP_LEFT, 4, 8);
+            lv_label_set_text(alert_label, forecast.alertflg.c_str());
+            lv_obj_set_style_text_font(alert_label, R.font.ipa_24, 0);
+            lv_obj_set_style_text_color(alert_label, lv_color_white(), 0);
+
+            auto shindo_title = lv_label_create(forecast_header_);
+            lv_obj_align(shindo_title, LV_ALIGN_BOTTOM_LEFT, 2, -6);
+            lv_label_set_text(shindo_title, "最大\n震度");
+            lv_obj_set_style_text_font(shindo_title, R.font.ipa_16, 0);
+            lv_obj_set_style_text_color(shindo_title, lv_color_white(), 0);
+
+            auto shindo_label = lv_label_create(forecast_header_);
+            lv_obj_set_size(shindo_label, 68, LV_SIZE_CONTENT);
+            lv_obj_align(shindo_label, LV_ALIGN_BOTTOM_RIGHT, -2, -8);
+            lv_obj_set_style_text_align(shindo_label, LV_TEXT_ALIGN_CENTER, 0);
+            lv_label_set_text(shindo_label, forecast.calcintensity.c_str());
+            lv_obj_set_style_text_font(shindo_label, R.font.ipa_numbers_40, 0);
+            lv_obj_set_style_text_color(shindo_label, lv_color_white(), 0);
+        }
+    }
+}
+
+void KyoshinScreen::update(ScreenLayout screen_layout, const lv_image_dsc_t *img) {
+    buildScreenLayout(screen_layout);
+    if (img) lv_image_set_src(image_, img);
+
+    if (screen_layout == ScreenLayout::HorizontalInfo) {
+        updateForecast(kyoshin_monitor->getForecast());
     }
 }

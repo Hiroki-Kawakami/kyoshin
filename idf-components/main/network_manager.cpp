@@ -31,16 +31,6 @@ namespace {
 }
 
 void NetworkManager::init() {
-    esp_err_t err = nvs_flash_init();
-    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        if ((err = nvs_flash_erase()) == ESP_OK) {
-            err = nvs_flash_init();
-        }
-    }
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to initialize NVS flash");
-        return;
-    }
     wifi_sta = new espp::WifiSta(config);
     esp_wifi_set_ps(WIFI_PS_NONE);
 }

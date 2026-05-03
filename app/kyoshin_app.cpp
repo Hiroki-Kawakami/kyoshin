@@ -1,5 +1,6 @@
 #include "kyoshin_app.hpp"
 #include "screens/wifi_connect_screen.hpp"
+#include "nvs.hpp"
 #include "network_manager.hpp"
 
 KyoshinMonitor *kyoshin_monitor;
@@ -10,6 +11,7 @@ void show_wifi_connect() {
 }
 
 extern "C" void kyoshin_app() {
+    NVS::init();
     network_manager.init();
     lv_async_call([](){
         show_wifi_connect();
