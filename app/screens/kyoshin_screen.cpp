@@ -8,6 +8,8 @@ void KyoshinScreen::build() {
     if (!kyoshin_monitor) {
         kyoshin_monitor = new KyoshinMonitor();
     }
+    lv_obj_add_flag(root_, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_fn(root_, LV_EVENT_PRESSED, [this](lv_event_t*){ screenClicked(); });
     image_ = lv_image_create(root_);
 }
 
@@ -143,6 +145,7 @@ void KyoshinScreen::buildScreenLayout(ScreenLayout screen_layout) {
         if (!forecast_) {
             forecast_ = lv_obj_create(root_);
             lv_obj_remove_style_all(forecast_);
+            lv_obj_remove_flag(forecast_, LV_OBJ_FLAG_CLICKABLE);
             lv_obj_set_size(forecast_, 108, 240);
             lv_obj_align(forecast_, LV_ALIGN_TOP_RIGHT, 0, 0);
             lv_obj_set_style_bg_color(forecast_, lv_color_white(), 0);
@@ -155,11 +158,13 @@ void KyoshinScreen::buildScreenLayout(ScreenLayout screen_layout) {
         if (!forecast_header_) {
             forecast_header_ = lv_obj_create(root_);
             lv_obj_remove_style_all(forecast_header_);
+            lv_obj_remove_flag(forecast_header_, LV_OBJ_FLAG_CLICKABLE);
             lv_obj_set_size(forecast_header_, 104, 88);
             lv_obj_align(forecast_header_, LV_ALIGN_TOP_RIGHT, 0, 0);
             lv_obj_set_style_bg_color(forecast_header_, lv_color_hex(0xd3d3d3), 0);
             lv_obj_set_style_bg_opa(forecast_header_, LV_OPA_COVER, 0);
         }
+        if (menu_) lv_obj_move_foreground(menu_);
     }
 
     screen_layout_ = screen_layout;
@@ -238,5 +243,76 @@ void KyoshinScreen::update(ScreenLayout screen_layout, const lv_image_dsc_t *img
 
     if (screen_layout == ScreenLayout::HorizontalInfo) {
         updateForecast(kyoshin_monitor->getForecast());
+    }
+}
+
+void KyoshinScreen::screenClicked() {
+    if (!menu_) openMenu();
+    else closeMenu();
+}
+
+void KyoshinScreen::openMenu() {
+    closeMenu();
+    menu_ = lv_obj_create(root_);
+    lv_obj_remove_style_all(menu_);
+    lv_obj_set_size(menu_, LV_PCT(100), 94);
+    lv_obj_align(menu_, LV_ALIGN_BOTTOM_MID, 0, 0);
+    lv_obj_set_style_bg_color(menu_, lv_color_white(), 0);
+    lv_obj_set_style_bg_opa(menu_, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_side(menu_, LV_BORDER_SIDE_TOP, 0);
+    lv_obj_set_style_border_width(menu_, 2, 0);
+    lv_obj_set_style_border_color(menu_, lv_color_hex(0xdddddd), 0);
+    lv_obj_set_style_border_opa(menu_, LV_OPA_COVER, 0);
+
+    auto create_dropdown = [](lv_obj_t *parent){
+        auto dropdown = lv_dropdown_create(parent);
+        lv_obj_set_height(dropdown, 40);
+        lv_obj_set_style_text_font(dropdown, R.font.ipa_16, 0);
+        auto list = lv_dropdown_get_list(dropdown);
+        lv_obj_set_style_text_font(list, R.font.ipa_16, 0);
+        return dropdown;
+    };
+
+    auto region_dd = create_dropdown(menu_);
+    lv_obj_set_width(region_dd, 125);
+    lv_obj_align(region_dd, LV_ALIGN_TOP_LEFT, 4, 4);
+    lv_dropdown_set_options(region_dd, "全国\n能登半島");
+    auto borehole_dd = create_dropdown(menu_);
+    lv_obj_set_width(borehole_dd, 95);
+    lv_obj_align(borehole_dd, LV_ALIGN_TOP_LEFT, 133, 4);
+    lv_dropdown_set_options(borehole_dd, "地表\n地中");
+
+    auto rimg_dd = create_dropdown(menu_);
+    lv_obj_set_width(rimg_dd, 224);
+    lv_obj_align(rimg_dd, LV_ALIGN_BOTTOM_LEFT, 4, -4);
+    lv_dropdown_set_options(rimg_dd,
+        "リアルタイム震度\n"
+        "最大加速度\n"
+        "最大速度\n"
+        "最大変位\n"
+        "0.125Hz速度応答\n"
+        "0.25Hz速度応答\n"
+        "0.5Hz速度応答\n"
+        "1.0Hz速度応答\n"
+        "2.0Hz速度応答\n"
+        "4.0Hz速度応答"
+    );
+
+    auto settings_button = lv_button_create(menu_);
+    lv_obj_set_size(settings_button, 84, 84);
+    lv_obj_align(settings_button, LV_ALIGN_RIGHT_MID, -4, 0);
+    lv_obj_set_flex_flow(settings_button, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(settings_button, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    auto settings_image = lv_image_create(settings_button);
+    lv_image_set_src(settings_image, R.icon.settings);
+    auto settings_label = lv_label_create(settings_button);
+    lv_label_set_text(settings_label, "設定");
+    lv_obj_set_style_text_font(settings_label, R.font.ipa_16, 0);
+}
+
+void KyoshinScreen::closeMenu() {
+    if (menu_) {
+        lv_obj_delete(menu_);
+        menu_ = nullptr;
     }
 }

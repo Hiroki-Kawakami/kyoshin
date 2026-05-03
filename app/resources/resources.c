@@ -1,5 +1,8 @@
 #include "resources.h"
 
+// MARK: icons
+extern const lv_image_dsc_t settings;
+
 // MARK: fonts
 extern const lv_font_t ipa_16;
 extern const lv_font_t ipa_24;
@@ -11,6 +14,9 @@ extern const uint8_t alarm2[];
 extern const uint8_t alarm3[];
 
 const struct Resources R = {
+    .icon = {
+        .settings = &settings,
+    },
     .font = {
         .ipa_16 = &ipa_16,
         .ipa_24 = &ipa_24,

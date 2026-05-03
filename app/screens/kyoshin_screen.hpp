@@ -18,6 +18,7 @@ private:
 
     lv_obj_t *forecast_{nullptr};
     lv_obj_t *forecast_header_{nullptr};
+    lv_obj_t *menu_{nullptr};
 
     ScreenLayout preferredScreenLayout() const;
     void preferredImageSize(ScreenLayout layout, uint16_t *width, uint16_t *height);
@@ -25,4 +26,8 @@ private:
     void buildScreenLayout(ScreenLayout screen_layout);
     void updateForecast(const KyoshinForecast &forecast);
     void update(ScreenLayout screen_layout, const lv_image_dsc_t *img);
+
+    void screenClicked();
+    void openMenu();
+    void closeMenu();
 };
