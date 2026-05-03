@@ -1,5 +1,6 @@
 #pragma once
 #include <functional>
+#include <cstdint>
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "esp_timer.h"
@@ -64,3 +65,7 @@ public:
         return static_cast<T>(xEventGroupWaitBits(this->handle, static_cast<EventBits_t>(bits), true, true, ticks_to_wait));
     }
 };
+
+// MARK: Audio
+void kyoshin_port_wav_play(const uint8_t *data, int volume, int repeat);
+void kyoshin_port_wav_stop();

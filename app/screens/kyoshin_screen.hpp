@@ -21,6 +21,7 @@ private:
 
     ScreenLayout preferredScreenLayout() const;
     void preferredImageSize(ScreenLayout layout, uint16_t *width, uint16_t *height);
+    void ring(const KyoshinForecast &forecast);
     void buildScreenLayout(ScreenLayout screen_layout);
     void updateForecast(const KyoshinForecast &forecast);
     void update(ScreenLayout screen_layout, const lv_image_dsc_t *img);

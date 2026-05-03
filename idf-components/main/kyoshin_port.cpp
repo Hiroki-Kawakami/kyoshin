@@ -1,4 +1,5 @@
 #include "kyoshin_port.hpp"
+#include "M5Unified.h"
 
 // MARK: Task
 void kyoshin_port_task_create(const char *name, std::function<void()> fn, int priority, size_t stack_size, int core) {
@@ -40,4 +41,12 @@ void kyoshin_port_timer_stop(kyoshin_port_timer_t *timer) {
 void kyoshin_port_timer_delete(kyoshin_port_timer_t *timer) {
     esp_timer_delete(timer->handle);
     delete timer;
+}
+
+void kyoshin_port_wav_play(const uint8_t *data, int volume, int repeat) {
+    M5.Speaker.setVolume(volume);
+    M5.Speaker.playWav(data, ~0, repeat, -1, true);
+}
+void kyoshin_port_wav_stop() {
+    M5.Speaker.stop();
 }

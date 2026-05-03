@@ -2,7 +2,7 @@
 #include "kyoshin_app.hpp"
 #include "bilinear.hpp"
 #include "map_load_screen.hpp"
-#include "resources/resources.h"
+#include "sound_controller.hpp"
 
 void KyoshinScreen::build() {
     if (!kyoshin_monitor) {
@@ -40,6 +40,7 @@ void KyoshinScreen::onAppear() {
 void KyoshinScreen::onDisappear() {
     kyoshin_monitor->setCallback(nullptr);
     kyoshin_monitor->stopUpdateTimer();
+    sound_controller.stop();
 }
 
 void KyoshinScreen::onData(uint16_t *data) {
@@ -52,6 +53,8 @@ void KyoshinScreen::onData(uint16_t *data) {
         auto output = BilinearOutput{ width, height, data };
         bilinear_resize(&input, &output);
     }
+    ring(kyoshin_monitor->getForecast());
+
     lv_lock();
     lv_async_call([this, screen_layout, width, height, data](){
         if (data) {
@@ -94,6 +97,21 @@ void KyoshinScreen::preferredImageSize(ScreenLayout layout, uint16_t *width, uin
         *width = 212;
         *height = 240;
         break;
+    }
+}
+
+void KyoshinScreen::ring(const KyoshinForecast &forecast) {
+    if (forecast.empty() ||
+        forecast.isFinal ||
+        forecast.isTraining) {
+        sound_controller.stop();
+        return;
+    }
+
+    if (forecast.isUpdated()) {
+        sound_controller.play(
+            forecast.type() == KyoshinForecastType::Alert ? kyoshin_settings.getAlertSound() :
+            kyoshin_settings.getNormalSound());
     }
 }
 

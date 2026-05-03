@@ -2,9 +2,12 @@
 #include <pthread.h>
 #include <time.h>
 #include <stdint.h>
+#include <string.h>
+#include <unistd.h>
 #include <optional>
 #include <functional>
 #include <cjson/cJSON.h>
+#include <SDL2/SDL.h>
 
 // FreeRTOS Compat Definitions
 using TickType_t = uint32_t;
@@ -216,3 +219,92 @@ public:
         return from_bits(result);
     }
 };
+
+// MARK: Audio
+struct kyoshin_port_wav_state_t {
+    SDL_AudioDeviceID dev = 0;
+    pthread_mutex_t mtx;
+    kyoshin_port_wav_state_t() { pthread_mutex_init(&mtx, nullptr); }
+};
+
+inline kyoshin_port_wav_state_t& kyoshin_port_wav_state() {
+    static kyoshin_port_wav_state_t s;
+    return s;
+}
+
+inline void kyoshin_port_wav_stop() {
+    auto &s = kyoshin_port_wav_state();
+    pthread_mutex_lock(&s.mtx);
+    SDL_AudioDeviceID dev = s.dev;
+    s.dev = 0;
+    pthread_mutex_unlock(&s.mtx);
+    if (dev) {
+        SDL_ClearQueuedAudio(dev);
+        SDL_CloseAudioDevice(dev);
+    }
+}
+
+inline void kyoshin_port_wav_play(const uint8_t *data, int volume, int repeat) {
+    kyoshin_port_wav_stop();
+    if (!data) return;
+    if (!(SDL_WasInit(SDL_INIT_AUDIO) & SDL_INIT_AUDIO)) {
+        if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) return;
+    }
+
+    // Derive file size from RIFF header: total = chunk_size field + 8
+    if (data[0]!='R'||data[1]!='I'||data[2]!='F'||data[3]!='F') return;
+    uint32_t chunk_size;
+    memcpy(&chunk_size, data + 4, 4);
+    int file_size = (int)(chunk_size + 8);
+
+    SDL_RWops *rw = SDL_RWFromConstMem(data, file_size);
+    SDL_AudioSpec wav_spec;
+    uint8_t *wav_buf;
+    uint32_t wav_len;
+    if (!SDL_LoadWAV_RW(rw, 1, &wav_spec, &wav_buf, &wav_len)) return;
+
+    // Scale volume from 0-255 to SDL's 0-128
+    uint8_t sdl_vol = (uint8_t)((volume * SDL_MIX_MAXVOLUME) / 255);
+    uint8_t *mix_buf = new uint8_t[wav_len]();
+    SDL_MixAudioFormat(mix_buf, wav_buf, wav_spec.format, wav_len, sdl_vol);
+    SDL_FreeWAV(wav_buf);
+
+    SDL_AudioDeviceID dev = SDL_OpenAudioDevice(nullptr, 0, &wav_spec, nullptr, 0);
+    if (!dev) { delete[] mix_buf; return; }
+
+    auto &s = kyoshin_port_wav_state();
+    pthread_mutex_lock(&s.mtx);
+    s.dev = dev;
+    pthread_mutex_unlock(&s.mtx);
+
+    int loops = (repeat <= 0) ? 1 : repeat;
+    for (int i = 0; i < loops; i++)
+        SDL_QueueAudio(dev, mix_buf, wav_len);
+    delete[] mix_buf;
+
+    SDL_PauseAudioDevice(dev, 0);
+
+    // Close device after playback in a detached thread
+    struct Args { SDL_AudioDeviceID dev; };
+    pthread_t t;
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    pthread_create(&t, &attr, [](void *p) -> void* {
+        auto *a = static_cast<Args*>(p);
+        while (SDL_GetQueuedAudioSize(a->dev) > 0)
+            usleep(50 * 1000);
+        auto &s = kyoshin_port_wav_state();
+        pthread_mutex_lock(&s.mtx);
+        if (s.dev == a->dev) {
+            s.dev = 0;
+            pthread_mutex_unlock(&s.mtx);
+            SDL_CloseAudioDevice(a->dev);
+        } else {
+            pthread_mutex_unlock(&s.mtx);
+        }
+        delete a;
+        return nullptr;
+    }, new Args{dev});
+    pthread_attr_destroy(&attr);
+}

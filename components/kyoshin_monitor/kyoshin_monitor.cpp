@@ -171,6 +171,7 @@ void KyoshinMonitor::worker1() {
     event_group_.clearBits(KyoshinMonitorEvent::ImageRendered);
     if (callback_) callback_->onData(imageBuffer());
     image_buffer_idx_ = (image_buffer_idx_ + 1) % image_buffers_.size();
+    forecast_.updateReportTime();
 }
 void KyoshinMonitor::worker2() {
     auto event = event_group_.waitBits(
