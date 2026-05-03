@@ -8,6 +8,7 @@
 #include <functional>
 #include <cjson/cJSON.h>
 #include <SDL2/SDL.h>
+#include "lvgl.hpp"
 
 // FreeRTOS Compat Definitions
 using TickType_t = uint32_t;
@@ -317,3 +318,15 @@ inline void kyoshin_port_wav_play(const uint8_t *data, int volume, int repeat) {
     }, new Args{dev});
     pthread_attr_destroy(&attr);
 }
+
+// MARK: Power Mode
+enum class PowerMode {
+    Normal,
+    Standby,
+    Night,
+    Interrupt,
+};
+inline PowerMode kyoshin_port_get_power_mode() { return PowerMode::Normal; }
+inline void kyoshin_port_set_power_mode(PowerMode mode) {}
+inline void kyoshin_port_feed_last_activity_tick() {}
+inline uint32_t kyoshin_port_get_last_activity_elaps() { return 0; }

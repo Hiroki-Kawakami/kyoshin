@@ -205,27 +205,35 @@ void KyoshinMonitor::worker1() {
             return;
         }
         forecast_.update(forecast_json.c_str());
+        if (!forecast_.empty() && kyoshin_port_get_power_mode() == PowerMode::Standby) {
+            kyoshin_port_set_power_mode(PowerMode::Normal);
+        }
     }
 
-    event_group_.clearBits(KyoshinMonitorEvent::ImageRendered | KyoshinMonitorEvent::Error);
-    copyBaseMapImage();
-    if (downloadRealtimeImage(time) && !forecast_.empty()) {
-        downloadPsWaveImage(time);
+    if (kyoshin_port_get_power_mode() == PowerMode::Normal || time % 10 == 0) {
+        event_group_.clearBits(KyoshinMonitorEvent::ImageRendered | KyoshinMonitorEvent::Error);
+        copyBaseMapImage();
+        if (downloadRealtimeImage(time) && !forecast_.empty()) {
+            downloadPsWaveImage(time);
+        } else {
+            event_group_.setBits(KyoshinMonitorEvent::PsWaveImageSkip);
+        }
+        http_client_.close();
+
+        event = event_group_.waitBits(
+            KyoshinMonitorEvent::ImageRendered |
+            KyoshinMonitorEvent::Error |
+            KyoshinMonitorEvent::Worker1Stop);
+        if (event & KyoshinMonitorEvent::Worker1Stop) return;
+        if (event & KyoshinMonitorEvent::Error) {
+            if (callback_) callback_->onData(nullptr);
+        } else {
+            if (callback_) callback_->onData(imageBuffer());
+            image_buffer_idx_ = (image_buffer_idx_ + 1) % image_buffers_.size();
+        }
     } else {
-        event_group_.setBits(KyoshinMonitorEvent::PsWaveImageSkip);
-    }
-    http_client_.close();
-
-    event = event_group_.waitBits(
-        KyoshinMonitorEvent::ImageRendered |
-        KyoshinMonitorEvent::Error |
-        KyoshinMonitorEvent::Worker1Stop);
-    if (event & KyoshinMonitorEvent::Worker1Stop) return;
-    if (event & KyoshinMonitorEvent::Error) {
+        http_client_.close();
         if (callback_) callback_->onData(nullptr);
-    } else {
-        if (callback_) callback_->onData(imageBuffer());
-        image_buffer_idx_ = (image_buffer_idx_ + 1) % image_buffers_.size();
     }
     forecast_.updateReportTime();
     event_group_.clearBits(KyoshinMonitorEvent::Update | KyoshinMonitorEvent::UpdateImage);

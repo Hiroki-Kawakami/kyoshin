@@ -39,6 +39,7 @@ void KyoshinScreen::onAppear() {
     lv_image_set_src(image_, &img_dsc_);
 
     kyoshin_monitor->startUpdateTimer();
+    kyoshin_port_feed_last_activity_tick();
 }
 void KyoshinScreen::onDisappear() {
     kyoshin_monitor->setCallback(nullptr);
@@ -243,6 +244,12 @@ void KyoshinScreen::update(ScreenLayout screen_layout, const lv_image_dsc_t *img
 
     if (screen_layout == ScreenLayout::HorizontalInfo) {
         updateForecast(kyoshin_monitor->getForecast());
+    }
+
+    if (kyoshin_port_get_power_mode() == PowerMode::Normal &&
+        kyoshin_monitor->getForecast().empty() &&
+        kyoshin_port_get_last_activity_elaps() >= kyoshin_settings.getStandbyDuration()) {
+        kyoshin_port_set_power_mode(PowerMode::Standby);
     }
 }
 

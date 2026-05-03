@@ -10,7 +10,7 @@ void show_wifi_connect() {
     screen_manager.push(std::move(wifi_connect_screen));
 }
 
-extern "C" void kyoshin_app() {
+void kyoshin_app() {
     NVS::init();
     network_manager.init();
     lv_async_call([](){

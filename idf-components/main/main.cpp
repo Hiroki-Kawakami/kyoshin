@@ -1,5 +1,11 @@
 #include "M5Unified.h"
 #include "esp_lvgl_port.h"
+#include "kyoshin_port.hpp"
+#include "kyoshin_app.hpp"
+#include "kyoshin_settings.hpp"
+
+static PowerMode power_mode = PowerMode::Normal;
+static uint32_t last_activity_tick;
 
 static void gui_init() {
     M5.begin();
@@ -31,19 +37,55 @@ static void gui_init() {
     lv_indev_set_read_cb(indev, [](lv_indev_t *indev, lv_indev_data_t *data){
         lgfx::v1::touch_point_t tp;
         auto count = M5.Display.getTouchRaw(&tp);
+        if (kyoshin_port_get_power_mode() == PowerMode::Standby || kyoshin_port_get_power_mode() == PowerMode::Night) {
+            if (count > 0) kyoshin_port_set_power_mode(PowerMode::Interrupt);
+            data->state = LV_INDEV_STATE_RELEASED;
+            return;
+        }
+        if (kyoshin_port_get_power_mode() == PowerMode::Interrupt) {
+            if (count == 0) kyoshin_port_set_power_mode(PowerMode::Normal);
+            data->state = LV_INDEV_STATE_RELEASED;
+            return;
+        }
         if (count > 0) {
             data->point.x = tp.x;
             data->point.y = tp.y;
             data->state = LV_INDEV_STATE_PRESSED;
+            kyoshin_port_feed_last_activity_tick();
         } else {
             data->state = LV_INDEV_STATE_RELEASED;
         }
     });
+    kyoshin_port_feed_last_activity_tick();
 }
 
 extern "C" void app_main(void) {
     gui_init();
-
-    void kyoshin_app(void);
     kyoshin_app();
+}
+
+PowerMode kyoshin_port_get_power_mode() {
+    return power_mode;
+}
+void kyoshin_port_set_power_mode(PowerMode mode) {
+    if (power_mode == mode) return;
+    switch (mode) {
+    case PowerMode::Standby:
+        M5.Display.setBrightness(kyoshin_settings.getStandbyBrightness());
+        break;
+    case PowerMode::Night:
+        M5.Display.setBrightness(kyoshin_settings.getNightBrightness());
+        break;
+    default:
+        M5.Display.setBrightness(kyoshin_settings.getBrightness());
+        kyoshin_port_feed_last_activity_tick();
+        break;
+    }
+    power_mode = mode;
+}
+void kyoshin_port_feed_last_activity_tick() {
+    last_activity_tick = lv_tick_get();
+}
+uint32_t kyoshin_port_get_last_activity_elaps() {
+    return lv_tick_elaps(last_activity_tick);
 }

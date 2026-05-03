@@ -21,3 +21,23 @@ void KyoshinSettings::setAlertSound(std::string alert_sound) {
     alert_sound_ = alert_sound;
     nvs_.set("alert_sound", alert_sound.c_str());
 }
+
+void KyoshinSettings::setStandbyDuration(uint16_t standby_duration) {
+    standby_duration_ = standby_duration;
+    nvs_.set("standby_duration", standby_duration);
+}
+
+void KyoshinSettings::setBrightness(uint8_t brightness) {
+    brightness_ = brightness;
+    nvs_.set("brightness", brightness);
+}
+
+void KyoshinSettings::setStandbyBrightness(uint8_t standby_brightness) {
+    standby_brightness_ = standby_brightness;
+    nvs_.set("standby_brightness", standby_brightness);
+}
+
+void KyoshinSettings::setNightBrightness(uint8_t night_brightness) {
+    night_brightness_ = night_brightness;
+    nvs_.set("night_brightness", night_brightness);
+}

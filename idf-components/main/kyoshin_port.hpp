@@ -70,3 +70,15 @@ public:
 // MARK: Audio
 void kyoshin_port_wav_play(const uint8_t *data, int volume, int repeat);
 void kyoshin_port_wav_stop();
+
+// MARK: Power Mode
+enum class PowerMode {
+    Normal,
+    Standby,
+    Night,
+    Interrupt,
+};
+PowerMode kyoshin_port_get_power_mode();
+void kyoshin_port_set_power_mode(PowerMode mode);
+void kyoshin_port_feed_last_activity_tick();
+uint32_t kyoshin_port_get_last_activity_elaps();

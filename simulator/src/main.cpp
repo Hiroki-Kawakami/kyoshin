@@ -2,6 +2,7 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include <unistd.h>
+#include "kyoshin_app.hpp"
 
 lv_display_t * sdl_hal_init(int32_t w, int32_t h) {
     lv_group_set_default(lv_group_create());
@@ -18,7 +19,6 @@ lv_display_t * sdl_hal_init(int32_t w, int32_t h) {
 extern "C" int main(void) {
     lv_init();
     sdl_hal_init(320, 240);
-    void kyoshin_app(void);
     kyoshin_app();
 
     while (1) {
