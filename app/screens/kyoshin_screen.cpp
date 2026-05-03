@@ -57,7 +57,7 @@ void KyoshinScreen::onData(time_t time, uint16_t *data) {
         auto output = BilinearOutput{ width, height, data };
         bilinear_resize(&input, &output);
     }
-    ring(kyoshin_monitor->getForecast());
+    ring(time, kyoshin_monitor->getForecast());
 
     lv_lock();
     lv_async_call([this, time, screen_layout, width, height, data](){
@@ -104,10 +104,12 @@ void KyoshinScreen::preferredImageSize(ScreenLayout layout, uint16_t *width, uin
     }
 }
 
-void KyoshinScreen::ring(const KyoshinForecast &forecast) {
+void KyoshinScreen::ring(time_t time, const KyoshinForecast &forecast) {
     if (forecast.empty() ||
         forecast.isFinal ||
-        forecast.isTraining) {
+        forecast.isTraining ||
+        kyoshin_port_get_power_mode() == PowerMode::Night ||
+        (!forecast.isAlert() && kyoshin_settings.inNightMode(time))) {
         sound_controller.stop();
         return;
     }
