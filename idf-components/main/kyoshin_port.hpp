@@ -1,10 +1,12 @@
 #pragma once
 #include <functional>
 #include <cstdint>
+#include <time.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "esp_timer.h"
 #include "cJSON.h"
+#include "kyoshin_forecast.hpp"
 
 // MARK: Task
 void kyoshin_port_task_create(const char *name, std::function<void()> fn, int priority, size_t stack_size, int core);
@@ -79,6 +81,6 @@ enum class PowerMode {
     Interrupt,
 };
 PowerMode kyoshin_port_get_power_mode();
+void kyoshin_port_update_power_mode(time_t time, const KyoshinForecast &forecast);
 void kyoshin_port_set_power_mode(PowerMode mode);
 void kyoshin_port_feed_last_activity_tick();
-uint32_t kyoshin_port_get_last_activity_elaps();

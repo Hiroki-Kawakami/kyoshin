@@ -47,7 +47,7 @@ void KyoshinScreen::onDisappear() {
     sound_controller.stop();
 }
 
-void KyoshinScreen::onData(uint16_t *data) {
+void KyoshinScreen::onData(time_t time, uint16_t *data) {
     uint16_t width, height;
     ScreenLayout screen_layout = preferredScreenLayout();
     preferredImageSize(screen_layout, &width, &height);
@@ -60,15 +60,15 @@ void KyoshinScreen::onData(uint16_t *data) {
     ring(kyoshin_monitor->getForecast());
 
     lv_lock();
-    lv_async_call([this, screen_layout, width, height, data](){
+    lv_async_call([this, time, screen_layout, width, height, data](){
         if (data) {
             img_dsc_.header.w = width;
             img_dsc_.header.h = height;
             img_dsc_.data_size = width * height * 2;
             img_dsc_.data = (const uint8_t*)data;
-            update(screen_layout, &img_dsc_);
+            update(time, screen_layout, &img_dsc_);
         } else {
-            update(screen_layout, nullptr);
+            update(time, screen_layout, nullptr);
         }
     });
     lv_unlock();
@@ -114,8 +114,7 @@ void KyoshinScreen::ring(const KyoshinForecast &forecast) {
 
     if (forecast.isUpdated()) {
         sound_controller.play(
-            forecast.type() == KyoshinForecastType::Alert ? kyoshin_settings.getAlertSound() :
-            kyoshin_settings.getNormalSound());
+            forecast.isAlert() ? kyoshin_settings.getAlertSound() : kyoshin_settings.getNormalSound());
     }
 }
 
@@ -238,18 +237,12 @@ void KyoshinScreen::updateForecast(const KyoshinForecast &forecast) {
     }
 }
 
-void KyoshinScreen::update(ScreenLayout screen_layout, const lv_image_dsc_t *img) {
+void KyoshinScreen::update(time_t time, ScreenLayout screen_layout, const lv_image_dsc_t *img) {
     buildScreenLayout(screen_layout);
     if (img) lv_image_set_src(image_, img);
 
     if (screen_layout == ScreenLayout::HorizontalInfo) {
         updateForecast(kyoshin_monitor->getForecast());
-    }
-
-    if (kyoshin_port_get_power_mode() == PowerMode::Normal &&
-        kyoshin_monitor->getForecast().empty() &&
-        kyoshin_port_get_last_activity_elaps() >= kyoshin_settings.getStandbyDuration()) {
-        kyoshin_port_set_power_mode(PowerMode::Standby);
     }
 }
 

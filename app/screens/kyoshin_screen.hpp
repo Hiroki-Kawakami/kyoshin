@@ -9,7 +9,7 @@ public:
     virtual void build();
     virtual void onAppear();
     virtual void onDisappear();
-    virtual void onData(uint16_t *data);
+    virtual void onData(time_t time, uint16_t *data);
 
 private:
     std::optional<ScreenLayout> screen_layout_{std::nullopt};
@@ -25,7 +25,7 @@ private:
     void ring(const KyoshinForecast &forecast);
     void buildScreenLayout(ScreenLayout screen_layout);
     void updateForecast(const KyoshinForecast &forecast);
-    void update(ScreenLayout screen_layout, const lv_image_dsc_t *img);
+    void update(time_t time, ScreenLayout screen_layout, const lv_image_dsc_t *img);
 
     void screenClicked();
     void openMenu();

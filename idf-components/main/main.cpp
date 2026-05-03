@@ -67,6 +67,21 @@ extern "C" void app_main(void) {
 PowerMode kyoshin_port_get_power_mode() {
     return power_mode;
 }
+void kyoshin_port_update_power_mode(time_t time, const KyoshinForecast &forecast) {
+    if (forecast.isAlert() || lv_tick_elaps(last_activity_tick) < kyoshin_settings.getStandbyDuration()) {
+        kyoshin_port_set_power_mode(PowerMode::Normal);
+        return;
+    }
+    if (kyoshin_settings.inNightMode(time)) {
+        kyoshin_port_set_power_mode(PowerMode::Night);
+        return;
+    }
+    if (!forecast.empty()) {
+        kyoshin_port_set_power_mode(PowerMode::Standby);
+        return;
+    }
+    kyoshin_port_set_power_mode(PowerMode::Normal);
+}
 void kyoshin_port_set_power_mode(PowerMode mode) {
     if (power_mode == mode) return;
     switch (mode) {
@@ -85,7 +100,4 @@ void kyoshin_port_set_power_mode(PowerMode mode) {
 }
 void kyoshin_port_feed_last_activity_tick() {
     last_activity_tick = lv_tick_get();
-}
-uint32_t kyoshin_port_get_last_activity_elaps() {
-    return lv_tick_elaps(last_activity_tick);
 }

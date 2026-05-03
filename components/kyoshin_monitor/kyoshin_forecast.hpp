@@ -2,8 +2,6 @@
 #include <string>
 #include "kyoshin_monitor_config.hpp"
 
-KYOSHIN_DEF_ENUM(KyoshinForecastType, Normal, Alert);
-
 struct KyoshinForecast {
     std::string reportId;
     std::string reportTime;
@@ -33,9 +31,8 @@ struct KyoshinForecast {
         return 0xff7800;
     }
 
-    KyoshinForecastType type() const {
-        if (alertflg == "警報") return KyoshinForecastType::Alert;
-        return KyoshinForecastType::Normal;
+    bool isAlert() const {
+        return alertflg == "警報";
     }
 
     std::string reportNumString() const {

@@ -37,7 +37,7 @@ inline KyoshinMonitorEventBits operator&(KyoshinMonitorEvent a, KyoshinMonitorEv
 
 class KyoshinMonitorCallback {
 public:
-    virtual void onData(uint16_t *img) {};
+    virtual void onData(time_t time, uint16_t *img) {};
     virtual void onBaseMapReady(bool result) {};
 };
 

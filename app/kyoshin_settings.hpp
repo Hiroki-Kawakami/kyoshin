@@ -20,6 +20,8 @@ public:
     uint8_t getBrightness() { return brightness_; }
     uint8_t getStandbyBrightness() { return standby_brightness_; }
     uint8_t getNightBrightness() { return night_brightness_; }
+    uint16_t getNightModeStart() { return night_mode_start_; }
+    uint16_t getNightModeEnd() { return night_mode_end_; }
 
     void setMapRegion(MapRegion map_region);
     void setScreenLayout(ScreenLayout kyoshin_screen_layout);
@@ -29,6 +31,10 @@ public:
     void setBrightness(uint8_t brightness);
     void setStandbyBrightness(uint8_t standby_brightness);
     void setNightBrightness(uint8_t night_brightness);
+    void setNightModeStart(uint16_t night_mode_start);
+    void setNightModeEnd(uint16_t night_mode_end);
+
+    bool inNightMode(time_t time);
 
 private:
     NVS nvs_{"kyoshin"};
@@ -41,6 +47,8 @@ private:
     uint8_t brightness_{127};
     uint8_t standby_brightness_{10};
     uint8_t night_brightness_{0};
+    uint16_t night_mode_start_{23 * 60 + 0};
+    uint16_t night_mode_end_{7 * 60 + 0};
 
 };
 

@@ -205,9 +205,7 @@ void KyoshinMonitor::worker1() {
             return;
         }
         forecast_.update(forecast_json.c_str());
-        if (!forecast_.empty() && kyoshin_port_get_power_mode() == PowerMode::Standby) {
-            kyoshin_port_set_power_mode(PowerMode::Normal);
-        }
+        kyoshin_port_update_power_mode(time, forecast_);
     }
 
     if (kyoshin_port_get_power_mode() == PowerMode::Normal || time % 10 == 0) {
@@ -226,14 +224,14 @@ void KyoshinMonitor::worker1() {
             KyoshinMonitorEvent::Worker1Stop);
         if (event & KyoshinMonitorEvent::Worker1Stop) return;
         if (event & KyoshinMonitorEvent::Error) {
-            if (callback_) callback_->onData(nullptr);
+            if (callback_) callback_->onData(time, nullptr);
         } else {
-            if (callback_) callback_->onData(imageBuffer());
+            if (callback_) callback_->onData(time, imageBuffer());
             image_buffer_idx_ = (image_buffer_idx_ + 1) % image_buffers_.size();
         }
     } else {
         http_client_.close();
-        if (callback_) callback_->onData(nullptr);
+        if (callback_) callback_->onData(time, nullptr);
     }
     forecast_.updateReportTime();
     event_group_.clearBits(KyoshinMonitorEvent::Update | KyoshinMonitorEvent::UpdateImage);

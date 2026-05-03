@@ -8,7 +8,7 @@
 #include <functional>
 #include <cjson/cJSON.h>
 #include <SDL2/SDL.h>
-#include "lvgl.hpp"
+#include "kyoshin_forecast.hpp"
 
 // FreeRTOS Compat Definitions
 using TickType_t = uint32_t;
@@ -327,6 +327,6 @@ enum class PowerMode {
     Interrupt,
 };
 inline PowerMode kyoshin_port_get_power_mode() { return PowerMode::Normal; }
+inline void kyoshin_port_update_power_mode(time_t time, const KyoshinForecast &forecast) {}
 inline void kyoshin_port_set_power_mode(PowerMode mode) {}
 inline void kyoshin_port_feed_last_activity_tick() {}
-inline uint32_t kyoshin_port_get_last_activity_elaps() { return 0; }
