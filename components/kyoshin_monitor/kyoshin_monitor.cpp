@@ -17,12 +17,12 @@ KyoshinMonitor::KyoshinMonitor() {
             this->worker1();
             event_group_.clearBits(KyoshinMonitorEvent::Update | KyoshinMonitorEvent::Error);
         }
-    }, 2, 24 * 1024, 0);
+    }, 3, 24 * 1024, 0);
     kyoshin_port_task_create("kyoshin2", [this](){
         while (!event_group_.contains(KyoshinMonitorEvent::Worker2End)) {
             this->worker2();
         }
-    }, 2, 24 * 1024, 1);
+    }, 3, 24 * 1024, 1);
 }
 
 KyoshinMonitor::~KyoshinMonitor() {
