@@ -1,4 +1,3 @@
-#include <cmath>
 #include "settings_display_screen.hpp"
 #include "kyoshin_settings.hpp"
 
@@ -11,6 +10,7 @@ void SettingsDisplayScreen::build() {
         static_cast<int>(kyoshin_settings.getScreenLayout()),
         std::nullopt,
         [](int idx){ kyoshin_settings.setScreenLayout(static_cast<ScreenLayout>(idx)); });
+    addSeparator();
     addSliderRow(
         "明るさ",
         [](int value){ return std::to_string((int)roundf((float)value * 100 / 255)) + "%"; },
@@ -19,6 +19,7 @@ void SettingsDisplayScreen::build() {
             kyoshin_settings.setBrightness(value);
             if (is_last) kyoshin_port_set_brightness(value);
         });
+    addSeparator();
     static const uint32_t kStandbyDurations[] = {
         10000, 15000, 20000, 30000, 45000,
         60000, 120000, 300000, 600000, 900000, 1800000,
@@ -37,6 +38,7 @@ void SettingsDisplayScreen::build() {
         standbyIndex(),
         100,
         [](int idx){ kyoshin_settings.setStandbyDuration(kStandbyDurations[idx]); });
+    addSeparator();
     addSliderRow(
         "スタンバイモードの明るさ",
         [](int value){ return std::to_string((int)roundf((float)value * 100 / 255)) + "%"; },
@@ -49,4 +51,5 @@ void SettingsDisplayScreen::build() {
                 kyoshin_port_set_brightness(value);
             }
         });
+    addSeparator();
 }

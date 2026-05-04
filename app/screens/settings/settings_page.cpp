@@ -70,15 +70,21 @@ void SettingsPage::addListRow(
     lv_obj_set_flex_grow(label, 1);
 
     factory(row, col);
-
-    auto sep = lv_obj_create(list_);
-    lv_obj_remove_style_all(sep);
-    lv_obj_set_size(sep, LV_PCT(100), 1);
-    lv_obj_set_style_margin_hor(sep, 8, 0);
-    lv_obj_set_style_bg_color(sep, lv_palette_lighten(LV_PALETTE_GREY, 2), 0);
-    lv_obj_set_style_bg_opa(sep, LV_OPA_COVER, 0);
 }
 
+void SettingsPage::addSwitchRow(
+    const char *title,
+    bool value,
+    std::function<void(bool)> on_change) {
+
+    addListRow(title, [=](lv_obj_t *row, lv_obj_t*){
+        auto sw = lv_switch_create(row);
+        if (value) lv_obj_add_state(sw, LV_STATE_CHECKED);
+        lv_obj_add_event_fn(sw, LV_EVENT_VALUE_CHANGED, [=](lv_event_t*){
+            on_change(lv_obj_has_state(sw, LV_STATE_CHECKED));
+        });
+    });
+}
 void SettingsPage::addDropdownRow(
     const char *title,
     const char *options,
@@ -143,4 +149,13 @@ void SettingsPage::addSliderRow(
             on_change(value, true);
         });
     });
+}
+
+void SettingsPage::addSeparator() {
+    auto sep = lv_obj_create(list_);
+    lv_obj_remove_style_all(sep);
+    lv_obj_set_size(sep, LV_PCT(100), 1);
+    lv_obj_set_style_margin_hor(sep, 8, 0);
+    lv_obj_set_style_bg_color(sep, lv_palette_lighten(LV_PALETTE_GREY, 2), 0);
+    lv_obj_set_style_bg_opa(sep, LV_OPA_COVER, 0);
 }
