@@ -101,3 +101,6 @@ void kyoshin_port_set_power_mode(PowerMode mode) {
 void kyoshin_port_feed_last_activity_tick() {
     last_activity_tick = lv_tick_get();
 }
+void kyoshin_port_set_brightness(int brightness) {
+    M5.Display.setBrightness(brightness);
+}

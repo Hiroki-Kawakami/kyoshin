@@ -79,21 +79,63 @@ void SettingsPage::addListRow(
     lv_obj_set_style_bg_opa(sep, LV_OPA_COVER, 0);
 }
 
-lv_obj_t *SettingsPage::createDropdown(
-    lv_obj_t *parent,
+void SettingsPage::addDropdownRow(
+    const char *title,
     const char *options,
     int selected,
     std::function<void(int)> on_change) {
 
-    auto dropdown = lv_dropdown_create(parent);
-    lv_obj_set_height(dropdown, 32);
-    lv_obj_set_style_text_font(dropdown, R.font.ipa_16, 0);
-    auto list = lv_dropdown_get_list(dropdown);
-    lv_obj_set_style_text_font(list, R.font.ipa_16, 0);
-    lv_dropdown_set_options(dropdown, options);
-    lv_dropdown_set_selected(dropdown, selected);
-    lv_obj_add_event_fn(dropdown, LV_EVENT_VALUE_CHANGED, [=](lv_event_t*){
-        on_change(lv_dropdown_get_selected(dropdown));
+    addListRow(title, [=](lv_obj_t *row, lv_obj_t*){
+        auto dropdown = lv_dropdown_create(row);
+        lv_obj_set_height(dropdown, 32);
+        lv_obj_set_style_text_font(dropdown, R.font.ipa_16, 0);
+        auto list = lv_dropdown_get_list(dropdown);
+        lv_obj_set_style_text_font(list, R.font.ipa_16, 0);
+        lv_dropdown_set_options(dropdown, options);
+        lv_dropdown_set_selected(dropdown, selected);
+        lv_obj_add_event_fn(dropdown, LV_EVENT_VALUE_CHANGED, [=](lv_event_t*){
+            on_change(lv_dropdown_get_selected(dropdown));
+        });
     });
-    return dropdown;
+}
+
+void SettingsPage::addSliderRow(
+    const char *title,
+    std::optional<std::function<std::string(int value)>> subtitle,
+    int min_value,
+    int max_value,
+    int initial_value,
+    std::function<void(int)> on_change) {
+
+    addListRow(title, [=](lv_obj_t *row, lv_obj_t *col){
+        auto cont = lv_obj_create(col);
+        lv_obj_remove_style_all(cont);
+        lv_obj_set_size(cont, LV_PCT(100), 30);
+        lv_obj_set_style_pad_hor(cont, 16, 0);
+
+        auto slider = lv_slider_create(cont);
+        lv_obj_align(slider, LV_ALIGN_TOP_MID, 0, 8);
+        lv_obj_set_size(slider, LV_PCT(100), 4);
+        lv_obj_set_style_margin_hor(slider, 8, 0);
+        lv_slider_set_range(slider, min_value, max_value);
+        lv_slider_set_value(slider, initial_value, LV_ANIM_OFF);
+
+        if (subtitle.has_value()) {
+            auto label = lv_label_create(row);
+            lv_obj_set_style_text_font(label, R.font.ipa_16, 0);
+            lv_obj_set_style_text_color(label, lv_color_hex(0x666666), 0);
+            lv_label_set_text(label, subtitle.value()(initial_value).c_str());
+
+            lv_obj_add_event_fn(slider, LV_EVENT_VALUE_CHANGED, [=](lv_event_t*){
+                int value = lv_slider_get_value(slider);
+                lv_label_set_text(label, subtitle.value()(value).c_str());
+                on_change(value);
+            });
+        } else {
+            lv_obj_add_event_fn(slider, LV_EVENT_VALUE_CHANGED, [=](lv_event_t*){
+                int value = lv_slider_get_value(slider);
+                on_change(value);
+            });
+        }
+    });
 }

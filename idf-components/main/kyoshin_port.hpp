@@ -84,3 +84,4 @@ PowerMode kyoshin_port_get_power_mode();
 void kyoshin_port_update_power_mode(time_t time, const KyoshinForecast &forecast);
 void kyoshin_port_set_power_mode(PowerMode mode);
 void kyoshin_port_feed_last_activity_tick();
+void kyoshin_port_set_brightness(int brightness);

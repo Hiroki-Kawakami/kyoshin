@@ -330,3 +330,4 @@ inline PowerMode kyoshin_port_get_power_mode() { return PowerMode::Normal; }
 inline void kyoshin_port_update_power_mode(time_t time, const KyoshinForecast &forecast) {}
 inline void kyoshin_port_set_power_mode(PowerMode mode) {}
 inline void kyoshin_port_feed_last_activity_tick() {}
+inline void kyoshin_port_set_brightness(int brightness) {}

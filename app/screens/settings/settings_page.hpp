@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include <optional>
 #include "screen_manager.hpp"
 #include "resources/resources.h"
@@ -13,9 +14,16 @@ protected:
         const char *title,
         std::function<void(lv_obj_t *row, lv_obj_t *col)> factory,
         std::optional<std::function<void()>> on_click = std::nullopt);
-    lv_obj_t *createDropdown(
-        lv_obj_t *parent,
+    void addDropdownRow(
+        const char *title,
         const char *options,
         int selected,
+        std::function<void(int)> on_change);
+    void addSliderRow(
+        const char *title,
+        std::optional<std::function<std::string(int value)>> subtitle,
+        int min_value,
+        int max_value,
+        int initial_value,
         std::function<void(int)> on_change);
 };
