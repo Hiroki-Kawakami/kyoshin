@@ -37,7 +37,7 @@ void SettingsPage::createList() {
 
 void SettingsPage::addListRow(
     const char *title,
-    std::function<void(lv_obj_t *row, lv_obj_t *col)> factory,
+    std::optional<std::function<void(lv_obj_t *row, lv_obj_t *col)>> factory,
     std::optional<std::function<void()>> on_click) {
 
     if (!list_) createList();
@@ -46,14 +46,6 @@ void SettingsPage::addListRow(
     lv_obj_set_size(col, LV_PCT(100), LV_SIZE_CONTENT);
     lv_obj_set_flex_flow(col, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(col, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-    if (on_click.has_value()) {
-        lv_obj_add_flag(col, LV_OBJ_FLAG_CLICKABLE);
-        lv_obj_set_style_bg_color(col, lv_color_black(), LV_STATE_PRESSED);
-        lv_obj_set_style_bg_opa(col, LV_OPA_20, LV_STATE_PRESSED);
-        lv_obj_add_event_fn(col, LV_EVENT_CLICKED, [=](lv_event_t*){ on_click.value(); });
-    } else {
-        lv_obj_remove_flag(col, LV_OBJ_FLAG_CLICKABLE);
-    }
 
     auto row = lv_obj_create(col);
     lv_obj_remove_style_all(row);
@@ -69,7 +61,21 @@ void SettingsPage::addListRow(
     lv_obj_set_style_text_font(label, R.font.ipa_16, 0);
     lv_obj_set_flex_grow(label, 1);
 
-    factory(row, col);
+    if (on_click.has_value()) {
+        auto icon = lv_label_create(row);
+        lv_label_set_text(icon, LV_SYMBOL_RIGHT);
+        lv_obj_set_style_text_font(icon, R.font.ipa_16, 0);
+        lv_obj_set_style_text_color(icon, lv_color_hex(0x666666), 0);
+
+        lv_obj_add_flag(col, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_set_style_bg_color(col, lv_color_black(), LV_STATE_PRESSED);
+        lv_obj_set_style_bg_opa(col, LV_OPA_20, LV_STATE_PRESSED);
+        lv_obj_add_event_fn(col, LV_EVENT_CLICKED, [=](lv_event_t*){ on_click.value()(); });
+    } else {
+        lv_obj_remove_flag(col, LV_OBJ_FLAG_CLICKABLE);
+    }
+
+    if (factory.has_value()) (*factory)(row, col);
 }
 
 void SettingsPage::addSwitchRow(

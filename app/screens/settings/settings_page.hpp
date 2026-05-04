@@ -13,7 +13,7 @@ protected:
     void createList();
     void addListRow(
         const char *title,
-        std::function<void(lv_obj_t *row, lv_obj_t *col)> factory,
+        std::optional<std::function<void(lv_obj_t *row, lv_obj_t *col)>> factory,
         std::optional<std::function<void()>> on_click = std::nullopt);
     void addSwitchRow(
         const char *title,

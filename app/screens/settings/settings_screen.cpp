@@ -1,6 +1,6 @@
 #include "settings_screen.hpp"
 #include "settings_display_screen.hpp"
-#include "settings_sound_screen.hpp"
+#include "settings_notify_screen.hpp"
 
 void SettingsScreen::build() {
     createBackButton("設定");
@@ -46,7 +46,7 @@ void SettingsScreen::build() {
         screen_manager.push(std::make_unique<SettingsDisplayScreen>());
     });
     create_row(R.icon.bell_ring, "通知音", [](){
-        screen_manager.push(std::make_unique<SettingsSoundScreen>());
+        screen_manager.push(std::make_unique<SettingsNotifyScreen>());
     });
     create_row(R.icon.moon, "夜間モード", [](){});
     create_row(R.icon.ellipsis, "その他", [](){});
