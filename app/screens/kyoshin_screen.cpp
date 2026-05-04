@@ -2,6 +2,7 @@
 #include "kyoshin_app.hpp"
 #include "bilinear.hpp"
 #include "map_load_screen.hpp"
+#include "settings/settings_screen.hpp"
 #include "sound_controller.hpp"
 
 void KyoshinScreen::build() {
@@ -327,6 +328,9 @@ void KyoshinScreen::openMenu() {
     lv_obj_align(settings_button, LV_ALIGN_RIGHT_MID, -4, 0);
     lv_obj_set_flex_flow(settings_button, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(settings_button, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_add_event_fn(settings_button, LV_EVENT_CLICKED, [](lv_event_t*){
+        screen_manager.push(std::make_unique<SettingsScreen>());
+    });
     auto settings_image = lv_image_create(settings_button);
     lv_image_set_src(settings_image, R.icon.settings);
     auto settings_label = lv_label_create(settings_button);

@@ -16,6 +16,10 @@ struct Sound {
 struct Resources {
     struct {
         const lv_image_dsc_t *settings;
+        const lv_image_dsc_t *monitor;
+        const lv_image_dsc_t *bell_ring;
+        const lv_image_dsc_t *moon;
+        const lv_image_dsc_t *ellipsis;
     } icon;
     struct {
         const lv_font_t *ipa_16;

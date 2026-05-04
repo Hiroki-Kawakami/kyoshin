@@ -2,6 +2,10 @@
 
 // MARK: icons
 extern const lv_image_dsc_t settings;
+extern const lv_image_dsc_t monitor;
+extern const lv_image_dsc_t bell_ring;
+extern const lv_image_dsc_t moon;
+extern const lv_image_dsc_t ellipsis;
 
 // MARK: fonts
 extern const lv_font_t ipa_16;
@@ -16,6 +20,10 @@ extern const uint8_t alarm3[];
 const struct Resources R = {
     .icon = {
         .settings = &settings,
+        .monitor = &monitor,
+        .bell_ring = &bell_ring,
+        .moon = &moon,
+        .ellipsis = &ellipsis,
     },
     .font = {
         .ipa_16 = &ipa_16,
