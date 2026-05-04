@@ -83,12 +83,14 @@ void SettingsPage::addDropdownRow(
     const char *title,
     const char *options,
     int selected,
+    std::optional<int> width,
     std::function<void(int)> on_change) {
 
     addListRow(title, [=](lv_obj_t *row, lv_obj_t*){
         auto dropdown = lv_dropdown_create(row);
         lv_obj_set_height(dropdown, 32);
         lv_obj_set_style_text_font(dropdown, R.font.ipa_16, 0);
+        if (width.has_value()) lv_obj_set_width(dropdown, width.value());
         auto list = lv_dropdown_get_list(dropdown);
         lv_obj_set_style_text_font(list, R.font.ipa_16, 0);
         lv_dropdown_set_options(dropdown, options);
@@ -105,7 +107,7 @@ void SettingsPage::addSliderRow(
     int min_value,
     int max_value,
     int initial_value,
-    std::function<void(int)> on_change) {
+    std::function<void(int, bool)> on_change) {
 
     addListRow(title, [=](lv_obj_t *row, lv_obj_t *col){
         auto cont = lv_obj_create(col);
@@ -125,17 +127,20 @@ void SettingsPage::addSliderRow(
             lv_obj_set_style_text_font(label, R.font.ipa_16, 0);
             lv_obj_set_style_text_color(label, lv_color_hex(0x666666), 0);
             lv_label_set_text(label, subtitle.value()(initial_value).c_str());
-
-            lv_obj_add_event_fn(slider, LV_EVENT_VALUE_CHANGED, [=](lv_event_t*){
+            lv_obj_add_event_fn(slider, LV_EVENT_VALUE_CHANGED, [=](lv_event_t *event){
                 int value = lv_slider_get_value(slider);
                 lv_label_set_text(label, subtitle.value()(value).c_str());
-                on_change(value);
+                on_change(value, false);
             });
         } else {
-            lv_obj_add_event_fn(slider, LV_EVENT_VALUE_CHANGED, [=](lv_event_t*){
+            lv_obj_add_event_fn(slider, LV_EVENT_VALUE_CHANGED, [=](lv_event_t *event){
                 int value = lv_slider_get_value(slider);
-                on_change(value);
+                on_change(value, false);
             });
         }
+        lv_obj_add_event_fn(slider, LV_EVENT_RELEASED, [=](lv_event_t *event){
+            int value = lv_slider_get_value(slider);
+            on_change(value, true);
+        });
     });
 }

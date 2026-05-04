@@ -18,6 +18,7 @@ protected:
         const char *title,
         const char *options,
         int selected,
+        std::optional<int> width,
         std::function<void(int)> on_change);
     void addSliderRow(
         const char *title,
@@ -25,5 +26,5 @@ protected:
         int min_value,
         int max_value,
         int initial_value,
-        std::function<void(int)> on_change);
+        std::function<void(int, bool)> on_change);
 };
