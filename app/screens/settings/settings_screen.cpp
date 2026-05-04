@@ -2,6 +2,7 @@
 #include "settings_display_screen.hpp"
 #include "settings_notify_screen.hpp"
 #include "settings_night_screen.hpp"
+#include "settings_misc_screen.hpp"
 
 void SettingsScreen::build() {
     createBackButton("設定");
@@ -52,5 +53,7 @@ void SettingsScreen::build() {
     create_row(R.icon.moon, "夜間モード", [](){
         screen_manager.push(std::make_unique<SettingsNightScreen>());
     });
-    create_row(R.icon.ellipsis, "その他", [](){});
+    create_row(R.icon.ellipsis, "その他", [](){
+        screen_manager.push(std::make_unique<SettingsMiscScreen>());
+    });
 }

@@ -165,3 +165,15 @@ void SettingsPage::addSeparator() {
     lv_obj_set_style_bg_color(sep, lv_palette_lighten(LV_PALETTE_GREY, 2), 0);
     lv_obj_set_style_bg_opa(sep, LV_OPA_COVER, 0);
 }
+
+void SettingsPage::showInformation(std::string message) {
+    auto msgbox = lv_msgbox_create(NULL);
+    auto label = lv_msgbox_add_text(msgbox, message.c_str());
+    lv_obj_set_style_text_font(label, R.font.ipa_16, 0);
+    lv_obj_set_style_margin_ver(label, 8, 0);
+    auto button = lv_msgbox_add_footer_button(msgbox, "OK");
+    lv_obj_set_style_text_font(button, R.font.ipa_16, 0);
+    lv_obj_add_event_fn(button, LV_EVENT_CLICKED, [=](lv_event_t*){
+        lv_msgbox_close(msgbox);
+    });
+}

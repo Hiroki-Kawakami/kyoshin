@@ -35,4 +35,5 @@ protected:
         std::function<void(int, bool)> on_change);
 
     void addSeparator();
+    static void showInformation(std::string message);
 };

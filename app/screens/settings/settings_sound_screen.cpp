@@ -60,7 +60,6 @@ void SettingsSoundScreen::save() {
 }
 
 void SettingsSoundScreen::soundTest() {
-    auto scroll_y = lv_obj_get_scroll_y(list_);
     auto msgbox = lv_msgbox_create(NULL);
     auto label = lv_msgbox_add_text(msgbox, "サウンドテスト");
     lv_obj_set_style_text_font(label, R.font.ipa_16, 0);
@@ -68,9 +67,8 @@ void SettingsSoundScreen::soundTest() {
     lv_obj_set_style_margin_ver(label, 16, 0);
     auto button = lv_msgbox_add_footer_button(msgbox, "完了");
     lv_obj_set_style_text_font(button, R.font.ipa_16, 0);
-    lv_obj_add_event_fn(button, LV_EVENT_CLICKED, [=, this](lv_event_t*){
+    lv_obj_add_event_fn(button, LV_EVENT_CLICKED, [=](lv_event_t*){
         sound_controller.stop();
-        lv_async_call([=, this](){ lv_obj_scroll_to_y(list_, scroll_y, LV_ANIM_OFF); });
         lv_msgbox_close(msgbox);
     });
     sound_controller.play(convert());
