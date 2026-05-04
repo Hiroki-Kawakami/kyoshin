@@ -4,8 +4,7 @@
 #include "json_parser.hpp"
 #include "flash_image.hpp"
 
-KyoshinMonitor::KyoshinMonitor(MapRegion map_region, bool borehole, RealtimeImgType realtime_img_type):
-    map_region_{map_region}, borehole_{borehole}, realtime_img_type_{realtime_img_type} {
+KyoshinMonitor::KyoshinMonitor() {
     for (int i = 0; i < image_buffers_.size(); i++) {
         image_buffers_[i] = (uint16_t*)malloc(sizeof(uint16_t) * KYOSHIN_SERVER_CONFIG.imgWidth * KYOSHIN_SERVER_CONFIG.imgHeight);
         printf("image_buffers_[%d]: %p\n", i, image_buffers_[i]);
@@ -29,13 +28,6 @@ void KyoshinMonitor::stopUpdateTimer() {
     latest_time_ = -1;
 }
 
-void KyoshinMonitor::setMapRegion(MapRegion region) {
-    stopUpdateTimer();
-    stopWorkers();
-    map_region_ = region;
-    startWorkers();
-}
-
 bool KyoshinMonitor::loadBaseMapImage(bool download) {
     flash_image.selectImage(getMapRegion().value);
     bool exists = flash_image.exists();
@@ -45,18 +37,13 @@ bool KyoshinMonitor::loadBaseMapImage(bool download) {
     return exists;
 }
 
-void KyoshinMonitor::setBorehole(bool borehole) {
-    stopUpdateTimer();
-    stopWorkers();
+void KyoshinMonitor::setImageSource(MapRegion map_region, bool borehole, RealtimeImgType realtime_img_type, bool reload) {
+    if (reload) stopUpdateTimer();
+    if (reload) stopWorkers();
+    map_region_ = map_region;
     borehole_ = borehole;
-    startWorkers();
-}
-
-void KyoshinMonitor::setRealtimeImageType(RealtimeImgType type) {
-    stopUpdateTimer();
-    stopWorkers();
-    realtime_img_type_ = type;
-    startWorkers();
+    realtime_img_type_ = realtime_img_type;
+    if (reload) startWorkers();
 }
 
 uint16_t *KyoshinMonitor::copyBaseMapImage() {

@@ -20,6 +20,7 @@ private:
     lv_obj_t *forecast_header_{nullptr};
     lv_obj_t *menu_{nullptr};
 
+    void setImageSource(bool reload);
     ScreenLayout preferredScreenLayout() const;
     void preferredImageSize(ScreenLayout layout, uint16_t *width, uint16_t *height);
     void ring(time_t time, const KyoshinForecast &forecast);

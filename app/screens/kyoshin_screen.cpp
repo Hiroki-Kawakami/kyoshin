@@ -7,10 +7,7 @@
 
 void KyoshinScreen::build() {
     if (!kyoshin_monitor) {
-        kyoshin_monitor = new KyoshinMonitor(
-            kyoshin_settings.getMapRegion(),
-            kyoshin_settings.getBorehole(),
-            kyoshin_settings.getRealtimeImageType());
+        kyoshin_monitor = new KyoshinMonitor();
     }
     lv_obj_add_flag(root_, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_fn(root_, LV_EVENT_PRESSED, [this](lv_event_t*){ screenClicked(); });
@@ -19,6 +16,7 @@ void KyoshinScreen::build() {
 
 void KyoshinScreen::onAppear() {
     kyoshin_monitor->setCallback(this);
+    setImageSource(false);
     if (!kyoshin_monitor->loadBaseMapImage()) {
         screen_manager.push(std::make_unique<MapLoadScreen>());
         return;
@@ -76,6 +74,14 @@ void KyoshinScreen::onData(time_t time, uint16_t *data) {
         }
     });
     lv_unlock();
+}
+
+void KyoshinScreen::setImageSource(bool reload) {
+    kyoshin_monitor->setImageSource(
+        kyoshin_settings.getMapRegion(),
+        kyoshin_settings.getBorehole(),
+        kyoshin_settings.getRealtimeImageType(),
+        reload);
 }
 
 ScreenLayout KyoshinScreen::preferredScreenLayout() const {
@@ -286,7 +292,7 @@ void KyoshinScreen::openMenu() {
     lv_dropdown_set_selected(region_dd, kyoshin_monitor->getMapRegion().value);
     lv_obj_add_event_fn(region_dd, LV_EVENT_VALUE_CHANGED, [this, region_dd](lv_event_t*){
         auto i = lv_dropdown_get_selected(region_dd);
-        kyoshin_monitor->setMapRegion(i);
+        kyoshin_settings.setMapRegion(i);
         refresh();
     });
 
@@ -297,7 +303,7 @@ void KyoshinScreen::openMenu() {
     lv_dropdown_set_selected(borehole_dd, kyoshin_monitor->getBorehole());
     lv_obj_add_event_fn(borehole_dd, LV_EVENT_VALUE_CHANGED, [this, borehole_dd](lv_event_t*){
         auto i = lv_dropdown_get_selected(borehole_dd);
-        kyoshin_monitor->setBorehole(i);
+        kyoshin_settings.setBorehole(i);
         refresh();
     });
 
@@ -319,7 +325,7 @@ void KyoshinScreen::openMenu() {
     lv_dropdown_set_selected(rimg_dd, kyoshin_monitor->getRealtimeImageType().value);
     lv_obj_add_event_fn(rimg_dd, LV_EVENT_VALUE_CHANGED, [this, rimg_dd](lv_event_t*){
         auto i = lv_dropdown_get_selected(rimg_dd);
-        kyoshin_monitor->setRealtimeImageType(i);
+        kyoshin_settings.setRealtimeImageType(i);
         refresh();
     });
 
@@ -346,6 +352,7 @@ void KyoshinScreen::closeMenu() {
 }
 
 void KyoshinScreen::refresh() {
+    setImageSource(true);
     if (!kyoshin_monitor->loadBaseMapImage()) {
         screen_manager.push(std::make_unique<MapLoadScreen>());
         return;

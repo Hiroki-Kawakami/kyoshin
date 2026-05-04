@@ -43,26 +43,24 @@ public:
 
 class KyoshinMonitor {
 public:
-    KyoshinMonitor(MapRegion map_region, bool borehole, RealtimeImgType realtime_img_type);
+    KyoshinMonitor();
     ~KyoshinMonitor();
     void startUpdateTimer();
     void stopUpdateTimer();
     void setCallback(KyoshinMonitorCallback *callback) { callback_ = callback; }
     MapRegion getMapRegion() const { return map_region_; }
-    void setMapRegion(MapRegion region);
     bool loadBaseMapImage(bool download = false);
     bool getBorehole() { return borehole_; }
-    void setBorehole(bool borehole);
     RealtimeImgType getRealtimeImageType() { return realtime_img_type_; }
-    void setRealtimeImageType(RealtimeImgType type);
+    void setImageSource(MapRegion map_region, bool borehole, RealtimeImgType realtime_img_type, bool reload);
     const KyoshinForecast &getForecast() const { return forecast_; }
     uint16_t *copyBaseMapImage();
     void updateImage();
 
 private:
-    MapRegion map_region_;
-    bool borehole_;
-    RealtimeImgType realtime_img_type_;
+    MapRegion map_region_{MapRegion::Japan};
+    bool borehole_{false};
+    RealtimeImgType realtime_img_type_{RealtimeImgType::RealtimeShindo};
     std::array<uint16_t*, 2> image_buffers_{};
     uint8_t image_buffer_idx_{0};
     HttpClient http_client_{KYOSHIN_SERVER_CONFIG.base_url};
