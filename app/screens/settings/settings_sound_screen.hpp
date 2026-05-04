@@ -10,4 +10,5 @@ private:
         const char *title,
         std::string sound_settings,
         std::function<void(std::string)> on_change);
+    void soundTest(std::string sound_settings);
 };

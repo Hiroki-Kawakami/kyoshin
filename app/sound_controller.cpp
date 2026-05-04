@@ -79,7 +79,7 @@ std::string SoundController::convert(SoundType type, SoundRepeat repeat, int vol
         default: return std::string{"once"};
         }
     };
-    return convert_type(type) + " " + convert_repeat(repeat) + " " + std::to_string(volume);
+    return convert_repeat(repeat) + " " + convert_type(type) + " " + std::to_string(volume);
 }
 
 void SoundController::parse(std::string sound_settings, SoundType *type, SoundRepeat *repeat, int *volume) {
