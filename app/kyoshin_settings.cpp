@@ -5,7 +5,17 @@ KyoshinSettings kyoshin_settings;
 
 void KyoshinSettings::setMapRegion(MapRegion map_region) {
     map_region_ = map_region;
-    nvs_.set("map_region", (uint8_t)map_region.value);
+    nvs_.set("map_region", static_cast<uint8_t>(map_region.value));
+}
+
+void KyoshinSettings::setBorehole(bool borehole) {
+    borehole_ = borehole;
+    nvs_.set("borehole", static_cast<uint8_t>(borehole));
+}
+
+void KyoshinSettings::setRealtimeImageType(RealtimeImgType realtime_img_type) {
+    realtime_img_type_ = realtime_img_type;
+    nvs_.set("realtime_img_type", static_cast<uint8_t>(realtime_img_type.value));
 }
 
 void KyoshinSettings::setScreenLayout(ScreenLayout screen_layout) {

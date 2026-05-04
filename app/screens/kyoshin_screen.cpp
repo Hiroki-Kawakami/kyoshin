@@ -6,7 +6,10 @@
 
 void KyoshinScreen::build() {
     if (!kyoshin_monitor) {
-        kyoshin_monitor = new KyoshinMonitor();
+        kyoshin_monitor = new KyoshinMonitor(
+            kyoshin_settings.getMapRegion(),
+            kyoshin_settings.getBorehole(),
+            kyoshin_settings.getRealtimeImageType());
     }
     lv_obj_add_flag(root_, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_fn(root_, LV_EVENT_PRESSED, [this](lv_event_t*){ screenClicked(); });
@@ -279,15 +282,23 @@ void KyoshinScreen::openMenu() {
     lv_obj_set_width(region_dd, 125);
     lv_obj_align(region_dd, LV_ALIGN_TOP_LEFT, 4, 4);
     lv_dropdown_set_options(region_dd, "全国\n能登半島");
+    lv_dropdown_set_selected(region_dd, kyoshin_monitor->getMapRegion().value);
     lv_obj_add_event_fn(region_dd, LV_EVENT_VALUE_CHANGED, [this, region_dd](lv_event_t*){
         auto i = lv_dropdown_get_selected(region_dd);
-        setRegion(static_cast<MapRegion>(i));
+        kyoshin_monitor->setMapRegion(i);
+        refresh();
     });
 
     auto borehole_dd = create_dropdown(menu_);
     lv_obj_set_width(borehole_dd, 95);
     lv_obj_align(borehole_dd, LV_ALIGN_TOP_LEFT, 133, 4);
     lv_dropdown_set_options(borehole_dd, "地表\n地中");
+    lv_dropdown_set_selected(borehole_dd, kyoshin_monitor->getBorehole());
+    lv_obj_add_event_fn(borehole_dd, LV_EVENT_VALUE_CHANGED, [this, borehole_dd](lv_event_t*){
+        auto i = lv_dropdown_get_selected(borehole_dd);
+        kyoshin_monitor->setBorehole(i);
+        refresh();
+    });
 
     auto rimg_dd = create_dropdown(menu_);
     lv_obj_set_width(rimg_dd, 224);
@@ -304,6 +315,12 @@ void KyoshinScreen::openMenu() {
         "2.0Hz速度応答\n"
         "4.0Hz速度応答"
     );
+    lv_dropdown_set_selected(rimg_dd, kyoshin_monitor->getRealtimeImageType().value);
+    lv_obj_add_event_fn(rimg_dd, LV_EVENT_VALUE_CHANGED, [this, rimg_dd](lv_event_t*){
+        auto i = lv_dropdown_get_selected(rimg_dd);
+        kyoshin_monitor->setRealtimeImageType(i);
+        refresh();
+    });
 
     auto settings_button = lv_button_create(menu_);
     lv_obj_set_size(settings_button, 84, 84);
@@ -324,8 +341,7 @@ void KyoshinScreen::closeMenu() {
     }
 }
 
-void KyoshinScreen::setRegion(MapRegion region) {
-    kyoshin_monitor->setMapRegion(region);
+void KyoshinScreen::refresh() {
     if (!kyoshin_monitor->loadBaseMapImage()) {
         screen_manager.push(std::make_unique<MapLoadScreen>());
         return;
