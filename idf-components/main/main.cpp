@@ -76,7 +76,7 @@ void kyoshin_port_update_power_mode(time_t time, const KyoshinForecast &forecast
         kyoshin_port_set_power_mode(PowerMode::Night);
         return;
     }
-    if (!forecast.empty()) {
+    if (forecast.empty()) {
         kyoshin_port_set_power_mode(PowerMode::Standby);
         return;
     }

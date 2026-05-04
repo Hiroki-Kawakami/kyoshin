@@ -7,7 +7,9 @@ static void async_fn_cb(void *arg) {
 }
 lv_result_t lv_async_call(std::function<void()> fn) {
     auto *fn_ptr = new std::function<void()>(std::move(fn));
-    return lv_async_call(async_fn_cb, fn_ptr);
+    auto result = lv_async_call(async_fn_cb, fn_ptr);
+    if (result != LV_RESULT_OK) delete fn_ptr;
+    return result;
 }
 
 static void event_fn_cb(lv_event_t *e) {
