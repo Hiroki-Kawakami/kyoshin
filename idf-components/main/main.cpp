@@ -68,12 +68,16 @@ PowerMode kyoshin_port_get_power_mode() {
     return power_mode;
 }
 void kyoshin_port_update_power_mode(time_t time, const KyoshinForecast &forecast) {
-    if (forecast.isAlert() || lv_tick_elaps(last_activity_tick) < kyoshin_settings.getStandbyDuration()) {
+    if (lv_tick_elaps(last_activity_tick) < kyoshin_settings.getStandbyDuration()) {
         kyoshin_port_set_power_mode(PowerMode::Normal);
         return;
     }
     if (kyoshin_settings.inNightMode(time)) {
-        kyoshin_port_set_power_mode(PowerMode::Night);
+        if (!forecast.empty() && kyoshin_settings.getNightBehavior(forecast.isAlert()) != NightBehavior::Ignore) {
+            kyoshin_port_set_power_mode(PowerMode::Normal);
+        } else {
+            kyoshin_port_set_power_mode(PowerMode::Night);
+        }
         return;
     }
     if (forecast.empty()) {

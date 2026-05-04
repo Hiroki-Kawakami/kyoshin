@@ -1,5 +1,4 @@
 #include "settings_display_screen.hpp"
-#include "kyoshin_settings.hpp"
 
 void SettingsDisplayScreen::build() {
     createBackButton("画面表示");

@@ -58,6 +58,11 @@ void KyoshinSettings::setNightBrightness(uint8_t night_brightness) {
     nvs_.set("night_brightness", night_brightness);
 }
 
+void KyoshinSettings::setNightModeEnable(bool night_mode_enable) {
+    night_mode_enable_ = night_mode_enable;
+    nvs_.set("night_mode_enable", static_cast<uint8_t>(night_mode_enable));
+}
+
 void KyoshinSettings::setNightModeStart(uint16_t night_mode_start) {
     night_mode_start_ = night_mode_start;
     nvs_.set("night_mode_start", night_mode_start);
@@ -68,7 +73,18 @@ void KyoshinSettings::setNightModeEnd(uint16_t night_mode_end) {
     nvs_.set("night_mode_end", night_mode_end);
 }
 
+void KyoshinSettings::setNightNormalBehavior(NightBehavior night_normal_behavior) {
+    night_normal_behavior_ = night_normal_behavior;
+    nvs_.set("night_normal_behavior", static_cast<uint8_t>(night_normal_behavior));
+}
+
+void KyoshinSettings::setNightAlertBehavior(NightBehavior night_alert_behavior) {
+    night_alert_behavior_ = night_alert_behavior;
+    nvs_.set("night_alert_behavior", static_cast<uint8_t>(night_alert_behavior));
+}
+
 bool KyoshinSettings::inNightMode(time_t time) {
+    if (!getNightModeEnable()) return false;
     struct tm *tm = localtime(&time);
     uint16_t now = tm->tm_hour * 60 + tm->tm_min;
 

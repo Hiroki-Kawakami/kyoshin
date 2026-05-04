@@ -119,7 +119,7 @@ void KyoshinScreen::ring(time_t time, const KyoshinForecast &forecast) {
         forecast.isFinal ||
         (forecast.isTraining && kyoshin_settings.getMuteTraining()) ||
         kyoshin_port_get_power_mode() == PowerMode::Night ||
-        (!forecast.isAlert() && kyoshin_settings.inNightMode(time))) {
+        (kyoshin_settings.inNightMode(time) && kyoshin_settings.getNightBehavior(forecast.isAlert()) != NightBehavior::Normal)) {
         sound_controller.stop();
         return;
     }

@@ -1,6 +1,5 @@
 #include <memory>
 #include "settings_sound_screen.hpp"
-#include "kyoshin_settings.hpp"
 #include "sound_controller.hpp"
 
 SettingsSoundScreen::SettingsSoundScreen(bool is_alert): is_alert_{is_alert} {

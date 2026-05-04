@@ -10,6 +10,12 @@ enum class ScreenLayout {
     HorizontalInfo,
 };
 
+enum class NightBehavior {
+    Ignore,
+    Mute,
+    Normal,
+};
+
 class KyoshinSettings {
 public:
     MapRegion getMapRegion() { return map_region_; }
@@ -23,8 +29,12 @@ public:
     uint8_t getBrightness() { return brightness_; }
     uint8_t getStandbyBrightness() { return standby_brightness_; }
     uint8_t getNightBrightness() { return night_brightness_; }
+    uint16_t getNightModeEnable() { return night_mode_enable_; }
     uint16_t getNightModeStart() { return night_mode_start_; }
     uint16_t getNightModeEnd() { return night_mode_end_; }
+    NightBehavior getNightNormalBehavior() { return night_normal_behavior_; }
+    NightBehavior getNightAlertBehavior() { return night_alert_behavior_; }
+    NightBehavior getNightBehavior(bool is_alert) { return is_alert ? night_alert_behavior_ : night_normal_behavior_; }
 
     void setMapRegion(MapRegion map_region);
     void setBorehole(bool borehole);
@@ -37,8 +47,11 @@ public:
     void setBrightness(uint8_t brightness);
     void setStandbyBrightness(uint8_t standby_brightness);
     void setNightBrightness(uint8_t night_brightness);
+    void setNightModeEnable(bool night_mode_enable);
     void setNightModeStart(uint16_t night_mode_start);
     void setNightModeEnd(uint16_t night_mode_end);
+    void setNightNormalBehavior(NightBehavior night_normal_behavior);
+    void setNightAlertBehavior(NightBehavior night_alert_behavior);
 
     bool inNightMode(time_t time);
 
@@ -56,8 +69,11 @@ private:
     uint8_t brightness_{127};
     uint8_t standby_brightness_{12};
     uint8_t night_brightness_{0};
+    bool night_mode_enable_{true};
     uint16_t night_mode_start_{23 * 60 + 0};
     uint16_t night_mode_end_{7 * 60 + 0};
+    NightBehavior night_normal_behavior_{NightBehavior::Ignore};
+    NightBehavior night_alert_behavior_{NightBehavior::Normal};
 
 };
 

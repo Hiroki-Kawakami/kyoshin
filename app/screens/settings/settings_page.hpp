@@ -3,6 +3,7 @@
 #include <string>
 #include <optional>
 #include "screen_manager.hpp"
+#include "kyoshin_settings.hpp"
 #include "resources/resources.h"
 
 class SettingsPage: public Screen {

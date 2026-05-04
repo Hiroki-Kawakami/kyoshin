@@ -1,6 +1,5 @@
 #include "settings_notify_screen.hpp"
 #include "settings_sound_screen.hpp"
-#include "kyoshin_settings.hpp"
 
 void SettingsNotifyScreen::build() {
     createBackButton("通知音");
