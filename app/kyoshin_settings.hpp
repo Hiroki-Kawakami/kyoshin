@@ -18,6 +18,7 @@ public:
     ScreenLayout getScreenLayout() { return screen_layout_; }
     std::string getNormalSound() { return normal_sound_; }
     std::string getAlertSound() { return alert_sound_; }
+    bool getMuteTraining() { return mute_training_; }
     uint32_t getStandbyDuration() { return standby_duration_; }
     uint8_t getBrightness() { return brightness_; }
     uint8_t getStandbyBrightness() { return standby_brightness_; }
@@ -31,6 +32,7 @@ public:
     void setScreenLayout(ScreenLayout kyoshin_screen_layout);
     void setNormalSound(std::string normal_sound);
     void setAlertSound(std::string alert_sound);
+    void setMuteTraining(bool mute_training);
     void setStandbyDuration(uint32_t standby_duration);
     void setBrightness(uint8_t brightness);
     void setStandbyBrightness(uint8_t standby_brightness);
@@ -49,6 +51,7 @@ private:
     ScreenLayout screen_layout_{ScreenLayout::AutoHorizontal};
     std::string normal_sound_{"update alarm1 64"};
     std::string alert_sound_{"repeat alarm2 64"};
+    bool mute_training_{true};
     uint32_t standby_duration_{30000};
     uint8_t brightness_{127};
     uint8_t standby_brightness_{12};

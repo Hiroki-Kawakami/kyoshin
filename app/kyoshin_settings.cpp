@@ -33,6 +33,11 @@ void KyoshinSettings::setAlertSound(std::string alert_sound) {
     nvs_.set("alert_sound", alert_sound.c_str());
 }
 
+void KyoshinSettings::setMuteTraining(bool mute_training) {
+    mute_training_ = mute_training;
+    nvs_.set("mute_training", static_cast<uint8_t>(mute_training));
+}
+
 void KyoshinSettings::setStandbyDuration(uint32_t standby_duration) {
     standby_duration_ = standby_duration;
     nvs_.set("standby_duration", standby_duration);

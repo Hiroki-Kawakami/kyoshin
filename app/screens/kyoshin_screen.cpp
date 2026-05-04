@@ -117,7 +117,7 @@ void KyoshinScreen::preferredImageSize(ScreenLayout layout, uint16_t *width, uin
 void KyoshinScreen::ring(time_t time, const KyoshinForecast &forecast) {
     if (forecast.empty() ||
         forecast.isFinal ||
-        forecast.isTraining ||
+        (forecast.isTraining && kyoshin_settings.getMuteTraining()) ||
         kyoshin_port_get_power_mode() == PowerMode::Night ||
         (!forecast.isAlert() && kyoshin_settings.inNightMode(time))) {
         sound_controller.stop();
