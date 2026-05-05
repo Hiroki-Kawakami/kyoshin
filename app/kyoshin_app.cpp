@@ -13,7 +13,9 @@ void show_wifi_connect() {
 void kyoshin_app() {
     NVS::init();
     network_manager.init();
+    lv_lock();
     lv_async_call([](){
         show_wifi_connect();
     });
+    lv_unlock();
 }
