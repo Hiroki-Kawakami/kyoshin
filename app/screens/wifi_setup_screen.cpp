@@ -213,6 +213,49 @@ void WiFiSetupScreen::showPasswordDialog(std::string ssid) {
     lv_obj_set_size(kb, 320, 140);
     lv_keyboard_set_textarea(kb, ta);
 
+    auto C = [](uint16_t v) constexpr {
+        return static_cast<lv_buttonmatrix_ctrl_t>(v);
+    };
+    auto B = [](uint16_t v) constexpr {
+        return static_cast<lv_buttonmatrix_ctrl_t>((LV_BUTTONMATRIX_CTRL_NO_REPEAT | LV_BUTTONMATRIX_CTRL_CLICK_TRIG | LV_BUTTONMATRIX_CTRL_CHECKED) | v);
+    };
+    auto H = [](uint16_t v) constexpr {
+        return static_cast<lv_buttonmatrix_ctrl_t>(LV_BUTTONMATRIX_CTRL_HIDDEN | v);
+    };
+    static const char * kb_map_lc[] = {
+        "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "\n",
+        " ", "a", "s", "d", "f", "g", "h", "j", "k", "l", " ", "\n",
+        "ABC", "z", "x", "c", "v", "b", "n", "m", " ", " ", LV_SYMBOL_BACKSPACE, "\n",
+        "1#", LV_SYMBOL_LEFT, " ", " ", ".", ",", "-", "_", " ", LV_SYMBOL_RIGHT, LV_SYMBOL_OK, nullptr
+    };
+    static const char * kb_map_uc[] = {
+        "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "\n",
+        " ", "A", "S", "D", "F", "G", "H", "J", "K", "L", " ", "\n",
+        "abc", "Z", "X", "C", "V", "B", "N", "M", " ", " ", LV_SYMBOL_BACKSPACE, "\n",
+        "1#", LV_SYMBOL_LEFT, " ", " ", ".", ",", "-", "_", " ", LV_SYMBOL_RIGHT, LV_SYMBOL_OK, nullptr
+    };
+    static const lv_buttonmatrix_ctrl_t kb_ctrl_text[] = {
+        C(1), C(1), C(1), C(1), C(1), C(1), C(1), C(1), C(1), C(1),
+        H(1), C(2), C(2), C(2), C(2), C(2), C(2), C(2), C(2), C(2), H(1),
+        B(13), C(10), C(10), C(10), C(10), C(10), C(10), C(10), H(1), H(1), B(15),
+        B(13), B(8), H(1), C(14), C(10), C(10), C(10), C(10), H(1), B(8), B(15),
+    };
+    static const char * kb_map_num[] = {
+        "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "\n",
+        "!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "\n",
+        " ", "-", "_", "=", "+", "[", "]", ";", ":", LV_SYMBOL_BACKSPACE, "\n",
+        "abc", " ", "'", "\"", ",", ".", "/", "?", "\\", " ", LV_SYMBOL_OK, nullptr
+    };
+    static const lv_buttonmatrix_ctrl_t kb_ctrl_num[] = {
+        C(1), C(1), C(1), C(1), C(1), C(1), C(1), C(1), C(1), C(1),
+        C(1), C(1), C(1), C(1), C(1), C(1), C(1), C(1), C(1), C(1),
+        H(2), C(4), C(4), C(4), C(4), C(4), C(4), C(4), C(4), B(6),
+        B(13), H(1), C(10), C(10), C(10), C(10), C(10), C(10), C(10), H(1), B(15),
+    };
+    lv_keyboard_set_map(kb, LV_KEYBOARD_MODE_TEXT_LOWER, kb_map_lc, kb_ctrl_text);
+    lv_keyboard_set_map(kb, LV_KEYBOARD_MODE_TEXT_UPPER, kb_map_uc, kb_ctrl_text);
+    lv_keyboard_set_map(kb, LV_KEYBOARD_MODE_SPECIAL, kb_map_num, kb_ctrl_num);
+
     lv_obj_add_event_fn(kb, LV_EVENT_READY, [this, ta, ssid](lv_event_t *) {
         std::string password = lv_textarea_get_text(ta);
         connectToAP(ssid, password);
