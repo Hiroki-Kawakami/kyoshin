@@ -199,6 +199,8 @@ void KyoshinMonitor::worker1() {
         event_group_.clearBits(KyoshinMonitorEvent::Update | KyoshinMonitorEvent::UpdateImage);
         return;
     }
+
+    auto prev_power_mode = kyoshin_port_get_power_mode();
     if (event & KyoshinMonitorEvent::Update) {
         auto forecast_json = downloadForecast(time);
         if (forecast_json.empty()) {
@@ -208,9 +210,12 @@ void KyoshinMonitor::worker1() {
         }
         forecast_.update(forecast_json.c_str());
         kyoshin_port_update_power_mode(time, forecast_);
+        printf("forecast(json): %s\n", forecast_json.c_str());
+        printf("forecast: %s\n", forecast_.toString().c_str());
+        printf("powermode: %d\n", static_cast<int>(kyoshin_port_get_power_mode()));
     }
 
-    if (kyoshin_port_get_power_mode() == PowerMode::Normal || time % 10 == 0) {
+    if (kyoshin_port_get_power_mode() == PowerMode::Normal || prev_power_mode == PowerMode::Normal || time % 10 == 0) {
         event_group_.clearBits(KyoshinMonitorEvent::ImageRendered | KyoshinMonitorEvent::Error);
         copyBaseMapImage();
         if (downloadRealtimeImage(time) && !forecast_.empty()) {

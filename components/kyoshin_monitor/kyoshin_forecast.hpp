@@ -53,4 +53,11 @@ struct KyoshinForecast {
     void updateReportTime() {
         prevReportTime = reportTime;
     }
+
+    std::string toString() {
+        if (empty()) return "No Report";
+        return
+            "[" + reportNumString() + "(" + reportId + ":" + reportTime + ")] " +
+            regionName + " " + calcintensity;
+    }
 };
