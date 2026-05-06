@@ -118,7 +118,6 @@ void NetworkManager::init() {
 }
 
 bool NetworkManager::isConfigured() {
-    return false;
     wifi_config_t cfg = {};
     if (esp_wifi_get_config(WIFI_IF_STA, &cfg) != ESP_OK) return false;
     return cfg.sta.ssid[0] != '\0';

@@ -12,20 +12,13 @@ static const char *rssi_label(int8_t rssi) {
 
 void WiFiSetupScreen::build() {
     // ヘッダー (40px)
-    auto header = lv_obj_create(root_);
-    lv_obj_remove_style_all(header);
-    lv_obj_align(header, LV_ALIGN_TOP_LEFT, 0, 0);
-    lv_obj_set_size(header, 320, 40);
-    lv_obj_set_flex_flow(header, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(header, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_hor(header, 16, 0);
-    lv_obj_set_style_border_side(header, LV_BORDER_SIDE_BOTTOM, 0);
-    lv_obj_set_style_border_width(header, 1, 0);
-    lv_obj_set_style_border_color(header, lv_color_hex(0xd3d3d3), 0);
-
-    auto title = lv_label_create(header);
-    lv_label_set_text(title, "WiFi設定");
-    lv_obj_set_style_text_font(title, R.font.ipa_24, 0);
+    header_ = lv_obj_create(root_);
+    lv_obj_remove_style_all(header_);
+    lv_obj_align(header_, LV_ALIGN_TOP_LEFT, 0, 0);
+    lv_obj_set_size(header_, 320, 40);
+    lv_obj_set_style_border_side(header_, LV_BORDER_SIDE_BOTTOM, 0);
+    lv_obj_set_style_border_width(header_, 1, 0);
+    lv_obj_set_style_border_color(header_, lv_color_hex(0xd3d3d3), 0);
 
     // コンテンツエリア (200px) — 状態によって中身を入れ替える
     content_ = lv_obj_create(root_);
@@ -53,6 +46,12 @@ void WiFiSetupScreen::startScan() {
 }
 
 void WiFiSetupScreen::showScanning() {
+    lv_obj_clean(header_);
+    auto title = lv_label_create(header_);
+    lv_obj_align(title, LV_ALIGN_LEFT_MID, 16, 0);
+    lv_label_set_text(title, "WiFi設定");
+    lv_obj_set_style_text_font(title, R.font.ipa_24, 0);
+
     lv_obj_clean(content_);
     lv_obj_set_flex_flow(content_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(content_, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -263,6 +262,37 @@ void WiFiSetupScreen::showPasswordDialog(std::string ssid) {
     lv_obj_add_event_fn(kb, LV_EVENT_CANCEL, [this](lv_event_t *) {
         startScan();
     });
+
+    lv_obj_clean(header_);
+    auto back_button = lv_button_create(header_);
+    lv_obj_remove_style_all(back_button);
+    lv_obj_set_height(back_button, 39);
+    lv_obj_align(back_button, LV_ALIGN_LEFT_MID, 0, 0);
+    lv_obj_set_style_pad_hor(back_button, 12, 0);
+    lv_obj_set_style_bg_color(back_button, lv_color_black(), LV_STATE_PRESSED);
+    lv_obj_set_style_bg_opa(back_button, LV_OPA_20, LV_STATE_PRESSED);
+    lv_obj_set_flex_flow(back_button, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(back_button, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_column(back_button, 12, 0);
+    lv_obj_add_event_fn(back_button, LV_EVENT_CLICKED, [this](lv_event_t*){
+        startScan();
+    });
+    auto back_icon = lv_label_create(back_button);
+    lv_label_set_text(back_icon, LV_SYMBOL_LEFT);
+    lv_obj_set_style_text_font(back_icon, R.font.ipa_24, 0);
+    auto back_label = lv_label_create(back_button);
+    lv_label_set_text(back_label, "パスワード入力");
+    lv_obj_set_style_text_font(back_label, R.font.ipa_24, 0);
+
+    auto connect_button = lv_button_create(header_);
+    lv_obj_align(connect_button, LV_ALIGN_RIGHT_MID, -4, 0);
+    lv_obj_add_event_fn(connect_button, LV_EVENT_CLICKED, [this, ta, ssid](lv_event_t *) {
+        std::string password = lv_textarea_get_text(ta);
+        connectToAP(ssid, password);
+    });
+    auto connect_label = lv_label_create(connect_button);
+    lv_label_set_text(connect_label, "接続");
+    lv_obj_set_style_text_font(connect_label, R.font.ipa_16, 0);
 }
 
 // ── 接続 ──────────────────────────────────────────────────────────────────
@@ -279,6 +309,12 @@ void WiFiSetupScreen::connectToAP(std::string ssid, std::string password) {
 }
 
 void WiFiSetupScreen::showConnecting(const std::string &ssid) {
+    lv_obj_clean(header_);
+    auto title = lv_label_create(header_);
+    lv_obj_align(title, LV_ALIGN_LEFT_MID, 16, 0);
+    lv_label_set_text(title, "WiFi接続");
+    lv_obj_set_style_text_font(title, R.font.ipa_24, 0);
+
     lv_obj_clean(content_);
     lv_obj_set_flex_flow(content_, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(content_, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);

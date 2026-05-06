@@ -10,6 +10,7 @@ public:
     virtual void onAppear();
 
 private:
+    lv_obj_t *header_;
     lv_obj_t *content_;
 
     void startScan();
