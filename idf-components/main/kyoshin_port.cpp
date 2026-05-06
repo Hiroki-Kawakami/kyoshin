@@ -1,5 +1,6 @@
 #include "kyoshin_port.hpp"
 #include "M5Unified.h"
+#include "esp_system.h"
 
 // MARK: Task
 void kyoshin_port_task_create(const char *name, std::function<void()> fn, int priority, size_t stack_size, int core) {
@@ -53,4 +54,7 @@ void kyoshin_port_wav_play(const uint8_t *data, int volume, int repeat) {
 }
 void kyoshin_port_wav_stop() {
     M5.Speaker.stop();
+}
+void kyoshin_port_restart() {
+    esp_restart();
 }

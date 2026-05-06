@@ -38,6 +38,7 @@ public:
     NightBehavior getNightNormalBehavior() { return night_normal_behavior_; }
     NightBehavior getNightAlertBehavior() { return night_alert_behavior_; }
     NightBehavior getNightBehavior(bool is_alert) { return is_alert ? night_alert_behavior_ : night_normal_behavior_; }
+    bool getEnterWiFiSetup() { return enter_wifi_setup_; }
 
     void setMapRegion(MapRegion map_region);
     void setBorehole(bool borehole);
@@ -55,6 +56,7 @@ public:
     void setNightModeEnd(uint16_t night_mode_end);
     void setNightNormalBehavior(NightBehavior night_normal_behavior);
     void setNightAlertBehavior(NightBehavior night_alert_behavior);
+    void setEnterWiFiSetup(bool enter_wifi_setup);
 
     bool inNightMode(time_t time);
 
@@ -77,6 +79,7 @@ private:
     uint16_t night_mode_end_{7 * 60 + 0};
     NightBehavior night_normal_behavior_{NightBehavior::Ignore};
     NightBehavior night_alert_behavior_{NightBehavior::Normal};
+    bool enter_wifi_setup_{false};
 
 };
 

@@ -11,19 +11,20 @@ void KyoshinSettings::restore() {
 
     if (nvs_.get("map_region", &u8) == NVS::Error::OK) map_region_ = MapRegion(u8);
     if (nvs_.get("borehole", &u8) == NVS::Error::OK) borehole_ = u8;
-    if (nvs_.get("realtime_img_type", &u8) == NVS::Error::OK) realtime_img_type_ = RealtimeImgType(u8);
+    if (nvs_.get("img_type", &u8) == NVS::Error::OK) realtime_img_type_ = RealtimeImgType(u8);
     if (nvs_.get("screen_layout", &u8) == NVS::Error::OK) screen_layout_ = static_cast<ScreenLayout>(u8);
     if (nvs_.get("mute_training", &u8) == NVS::Error::OK) mute_training_ = u8;
     if (nvs_.get("brightness", &u8) == NVS::Error::OK) brightness_ = u8;
-    if (nvs_.get("standby_brightness", &u8) == NVS::Error::OK) standby_brightness_ = u8;
-    if (nvs_.get("night_brightness", &u8) == NVS::Error::OK) night_brightness_ = u8;
-    if (nvs_.get("night_mode_enable", &u8) == NVS::Error::OK) night_mode_enable_ = u8;
-    if (nvs_.get("night_normal_behavior", &u8) == NVS::Error::OK) night_normal_behavior_ = static_cast<NightBehavior>(u8);
-    if (nvs_.get("night_alert_behavior", &u8) == NVS::Error::OK) night_alert_behavior_ = static_cast<NightBehavior>(u8);
+    if (nvs_.get("stby_bright", &u8) == NVS::Error::OK) standby_brightness_ = u8;
+    if (nvs_.get("night_bright", &u8) == NVS::Error::OK) night_brightness_ = u8;
+    if (nvs_.get("night_enable", &u8) == NVS::Error::OK) night_mode_enable_ = u8;
+    if (nvs_.get("night_norm_beh", &u8) == NVS::Error::OK) night_normal_behavior_ = static_cast<NightBehavior>(u8);
+    if (nvs_.get("night_alt_beh", &u8) == NVS::Error::OK) night_alert_behavior_ = static_cast<NightBehavior>(u8);
+    if (nvs_.get("wifi_setup", &u8) == NVS::Error::OK) enter_wifi_setup_ = u8;
 
-    if (nvs_.get("standby_duration", &u32) == NVS::Error::OK) standby_duration_ = u32;
+    if (nvs_.get("stby_duration", &u32) == NVS::Error::OK) standby_duration_ = u32;
 
-    if (nvs_.get("night_mode_start", &u16) == NVS::Error::OK) night_mode_start_ = u16;
+    if (nvs_.get("night_start", &u16) == NVS::Error::OK) night_mode_start_ = u16;
     if (nvs_.get("night_mode_end", &u16) == NVS::Error::OK) night_mode_end_ = u16;
 
     size_t len = 0;
@@ -52,7 +53,7 @@ void KyoshinSettings::setBorehole(bool borehole) {
 
 void KyoshinSettings::setRealtimeImageType(RealtimeImgType realtime_img_type) {
     realtime_img_type_ = realtime_img_type;
-    nvs_.set("realtime_img_type", static_cast<uint8_t>(realtime_img_type.value));
+    nvs_.set("img_type", static_cast<uint8_t>(realtime_img_type.value));
 }
 
 void KyoshinSettings::setScreenLayout(ScreenLayout screen_layout) {
@@ -77,7 +78,7 @@ void KyoshinSettings::setMuteTraining(bool mute_training) {
 
 void KyoshinSettings::setStandbyDuration(uint32_t standby_duration) {
     standby_duration_ = standby_duration;
-    nvs_.set("standby_duration", standby_duration);
+    nvs_.set("stby_duration", standby_duration);
 }
 
 void KyoshinSettings::setBrightness(uint8_t brightness) {
@@ -87,22 +88,22 @@ void KyoshinSettings::setBrightness(uint8_t brightness) {
 
 void KyoshinSettings::setStandbyBrightness(uint8_t standby_brightness) {
     standby_brightness_ = standby_brightness;
-    nvs_.set("standby_brightness", standby_brightness);
+    nvs_.set("stby_bright", standby_brightness);
 }
 
 void KyoshinSettings::setNightBrightness(uint8_t night_brightness) {
     night_brightness_ = night_brightness;
-    nvs_.set("night_brightness", night_brightness);
+    nvs_.set("night_bright", night_brightness);
 }
 
 void KyoshinSettings::setNightModeEnable(bool night_mode_enable) {
     night_mode_enable_ = night_mode_enable;
-    nvs_.set("night_mode_enable", static_cast<uint8_t>(night_mode_enable));
+    nvs_.set("night_enable", static_cast<uint8_t>(night_mode_enable));
 }
 
 void KyoshinSettings::setNightModeStart(uint16_t night_mode_start) {
     night_mode_start_ = night_mode_start;
-    nvs_.set("night_mode_start", night_mode_start);
+    nvs_.set("night_start", night_mode_start);
 }
 
 void KyoshinSettings::setNightModeEnd(uint16_t night_mode_end) {
@@ -112,12 +113,17 @@ void KyoshinSettings::setNightModeEnd(uint16_t night_mode_end) {
 
 void KyoshinSettings::setNightNormalBehavior(NightBehavior night_normal_behavior) {
     night_normal_behavior_ = night_normal_behavior;
-    nvs_.set("night_normal_behavior", static_cast<uint8_t>(night_normal_behavior));
+    nvs_.set("night_norm_beh", static_cast<uint8_t>(night_normal_behavior));
 }
 
 void KyoshinSettings::setNightAlertBehavior(NightBehavior night_alert_behavior) {
     night_alert_behavior_ = night_alert_behavior;
-    nvs_.set("night_alert_behavior", static_cast<uint8_t>(night_alert_behavior));
+    nvs_.set("night_alt_beh", static_cast<uint8_t>(night_alert_behavior));
+}
+
+void KyoshinSettings::setEnterWiFiSetup(bool enter_wifi_setup) {
+    enter_wifi_setup_ = enter_wifi_setup;
+    nvs_.set("wifi_setup", static_cast<uint8_t>(enter_wifi_setup));
 }
 
 bool KyoshinSettings::inNightMode(time_t time) {

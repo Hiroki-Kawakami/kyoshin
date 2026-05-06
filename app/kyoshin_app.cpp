@@ -15,13 +15,17 @@ void kyoshin_app() {
     NVS::init();
     kyoshin_settings.restore();
     network_manager.init();
-    if (network_manager.isConfigured()) {
+    if (network_manager.isConfigured() && !kyoshin_settings.getEnterWiFiSetup()) {
         lv_lock();
         lv_async_call([](){
             screen_manager.push(std::make_unique<WiFiConnectScreen>());
         });
         lv_unlock();
     } else {
+        if (kyoshin_settings.getEnterWiFiSetup()) {
+            kyoshin_settings.setEnterWiFiSetup(false);
+            kyoshin_settings.commit();
+        }
         lv_lock();
         lv_async_call([](){
             screen_manager.push(std::make_unique<WiFiSetupScreen>());
