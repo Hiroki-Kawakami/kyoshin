@@ -6,6 +6,8 @@
 
 static PowerMode power_mode = PowerMode::Normal;
 static uint32_t last_activity_tick;
+static bool keep_normal;
+static uint32_t keep_normal_tick;
 
 static void gui_init() {
     M5.begin();
@@ -64,27 +66,38 @@ extern "C" void app_main(void) {
     kyoshin_app();
 }
 
+static void reset_keep_normal() {
+    keep_normal = true;
+    keep_normal_tick = lv_tick_get();
+}
+
 PowerMode kyoshin_port_get_power_mode() {
     return power_mode;
 }
 void kyoshin_port_update_power_mode(time_t time, const KyoshinForecast &forecast) {
-    if (lv_tick_elaps(last_activity_tick) < kyoshin_settings.getStandbyDuration()) {
-        kyoshin_port_set_power_mode(PowerMode::Normal);
-        return;
-    }
+    PowerMode power_mode = PowerMode::Normal;
     if (kyoshin_settings.inNightMode(time)) {
         if (!forecast.empty() && kyoshin_settings.getNightBehavior(forecast.isAlert()) != NightBehavior::Ignore) {
-            kyoshin_port_set_power_mode(PowerMode::Normal);
+            power_mode = PowerMode::Normal;
+            reset_keep_normal();
         } else {
-            kyoshin_port_set_power_mode(PowerMode::Night);
+            power_mode = PowerMode::Night;
         }
-        return;
+    } else {
+        if (!forecast.empty()) {
+            power_mode = PowerMode::Normal;
+            reset_keep_normal();
+        } else {
+            power_mode = PowerMode::Standby;
+        }
     }
-    if (forecast.empty()) {
-        kyoshin_port_set_power_mode(PowerMode::Standby);
-        return;
+    if (keep_normal && lv_tick_elaps(keep_normal_tick) > 5000) {
+        keep_normal = false;
     }
-    kyoshin_port_set_power_mode(PowerMode::Normal);
+    if (keep_normal || lv_tick_elaps(last_activity_tick) < kyoshin_settings.getStandbyDuration()) {
+        power_mode = PowerMode::Normal;
+    }
+    kyoshin_port_set_power_mode(power_mode);
 }
 void kyoshin_port_set_power_mode(PowerMode mode) {
     if (power_mode == mode) return;
