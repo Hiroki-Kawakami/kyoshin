@@ -1,0 +1,310 @@
+#include "wifi_setup_screen.hpp"
+#include "kyoshin_screen.hpp"
+#include "network_manager.hpp"
+#include "resources/resources.h"
+
+static const char *rssi_label(int8_t rssi) {
+    if (rssi >= -60) return "強";
+    if (rssi >= -70) return "良";
+    if (rssi >= -80) return "中";
+    return "弱";
+}
+
+void WiFiSetupScreen::build() {
+    // ヘッダー (40px)
+    auto header = lv_obj_create(root_);
+    lv_obj_remove_style_all(header);
+    lv_obj_align(header, LV_ALIGN_TOP_LEFT, 0, 0);
+    lv_obj_set_size(header, 320, 40);
+    lv_obj_set_flex_flow(header, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(header, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_hor(header, 16, 0);
+    lv_obj_set_style_border_side(header, LV_BORDER_SIDE_BOTTOM, 0);
+    lv_obj_set_style_border_width(header, 1, 0);
+    lv_obj_set_style_border_color(header, lv_color_hex(0xd3d3d3), 0);
+
+    auto title = lv_label_create(header);
+    lv_label_set_text(title, "WiFi設定");
+    lv_obj_set_style_text_font(title, R.font.ipa_24, 0);
+
+    // コンテンツエリア (200px) — 状態によって中身を入れ替える
+    content_ = lv_obj_create(root_);
+    lv_obj_remove_style_all(content_);
+    lv_obj_align(content_, LV_ALIGN_BOTTOM_LEFT, 0, 0);
+    lv_obj_set_size(content_, 320, 200);
+    lv_obj_remove_flag(content_, LV_OBJ_FLAG_SCROLLABLE);
+}
+
+void WiFiSetupScreen::onAppear() {
+    startScan();
+}
+
+// ── スキャン ───────────────────────────────────────────────────────────────
+
+void WiFiSetupScreen::startScan() {
+    showScanning();
+    network_manager.scanAPs([this](std::vector<NetworkManager::WiFiAP> aps) {
+        lv_lock();
+        lv_async_call([this, aps = std::move(aps)]() mutable {
+            showAPList(aps);
+        });
+        lv_unlock();
+    });
+}
+
+void WiFiSetupScreen::showScanning() {
+    lv_obj_clean(content_);
+    lv_obj_set_flex_flow(content_, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(content_, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_row(content_, 12, 0);
+
+    auto spinner = lv_spinner_create(content_);
+    lv_obj_set_size(spinner, 48, 48);
+    lv_obj_set_style_arc_width(spinner, 5, LV_PART_MAIN);
+    lv_obj_set_style_arc_width(spinner, 5, LV_PART_INDICATOR);
+
+    auto label = lv_label_create(content_);
+    lv_label_set_text(label, "スキャン中...");
+    lv_obj_set_style_text_font(label, R.font.ipa_16, 0);
+}
+
+// ── APリスト ──────────────────────────────────────────────────────────────
+
+void WiFiSetupScreen::showAPList(const std::vector<NetworkManager::WiFiAP> &aps) {
+    lv_obj_clean(content_);
+    lv_obj_set_flex_flow(content_, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_style_pad_all(content_, 0, 0);
+
+    if (aps.empty()) {
+        lv_obj_set_flex_align(content_, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+        lv_obj_set_style_pad_row(content_, 12, 0);
+
+        auto label = lv_label_create(content_);
+        lv_label_set_text(label, "APが見つかりませんでした");
+        lv_obj_set_style_text_font(label, R.font.ipa_16, 0);
+
+        auto btn = lv_button_create(content_);
+        lv_obj_set_style_pad_hor(btn, 20, 0);
+        lv_obj_set_style_pad_ver(btn, 8, 0);
+        auto btn_label = lv_label_create(btn);
+        lv_label_set_text(btn_label, "再スキャン");
+        lv_obj_set_style_text_font(btn_label, R.font.ipa_16, 0);
+        lv_obj_add_event_fn(btn, LV_EVENT_CLICKED, [this](lv_event_t *) { startScan(); });
+        return;
+    }
+
+    lv_obj_set_flex_align(content_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+
+    // スクロール可能なリストコンテナ
+    auto list = lv_obj_create(content_);
+    lv_obj_remove_style_all(list);
+    lv_obj_set_size(list, 320, 200);
+    lv_obj_set_flex_flow(list, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(list, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_style_pad_all(list, 0, 0);
+    lv_obj_set_style_pad_row(list, 0, 0);
+    lv_obj_add_flag(list, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_scroll_dir(list, LV_DIR_VER);
+
+    // 再スキャン行
+    {
+        auto row = lv_obj_create(list);
+        lv_obj_remove_style_all(row);
+        lv_obj_set_size(row, LV_PCT(100), 36);
+        lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
+        lv_obj_set_flex_align(row, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+        lv_obj_set_style_pad_hor(row, 16, 0);
+        lv_obj_set_style_border_side(row, LV_BORDER_SIDE_BOTTOM, 0);
+        lv_obj_set_style_border_width(row, 1, 0);
+        lv_obj_set_style_border_color(row, lv_color_hex(0xd3d3d3), 0);
+        lv_obj_add_flag(row, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_set_style_bg_color(row, lv_color_black(), LV_STATE_PRESSED);
+        lv_obj_set_style_bg_opa(row, LV_OPA_10, LV_STATE_PRESSED);
+
+        auto label = lv_label_create(row);
+        lv_label_set_text(label, LV_SYMBOL_REFRESH " 再スキャン");
+        lv_obj_set_style_text_font(label, R.font.ipa_16, 0);
+        lv_obj_set_style_text_color(label, lv_color_hex(0x0066cc), 0);
+        lv_obj_add_event_fn(row, LV_EVENT_CLICKED, [this](lv_event_t *) { startScan(); });
+    }
+
+    // AP行
+    for (const auto &ap : aps) {
+        auto row = lv_obj_create(list);
+        lv_obj_remove_style_all(row);
+        lv_obj_set_size(row, LV_PCT(100), 40);
+        lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
+        lv_obj_set_flex_align(row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+        lv_obj_set_style_pad_hor(row, 16, 0);
+        lv_obj_set_style_pad_column(row, 6, 0);
+        lv_obj_set_style_border_side(row, LV_BORDER_SIDE_BOTTOM, 0);
+        lv_obj_set_style_border_width(row, 1, 0);
+        lv_obj_set_style_border_color(row, lv_color_hex(0xeeeeee), 0);
+        lv_obj_add_flag(row, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_set_style_bg_color(row, lv_color_black(), LV_STATE_PRESSED);
+        lv_obj_set_style_bg_opa(row, LV_OPA_10, LV_STATE_PRESSED);
+
+        auto ssid_label = lv_label_create(row);
+        lv_label_set_text(ssid_label, ap.ssid.c_str());
+        lv_obj_set_style_text_font(ssid_label, R.font.ipa_16, 0);
+        lv_obj_set_flex_grow(ssid_label, 1);
+
+        if (ap.secured) {
+            auto lock = lv_image_create(row);
+            lv_image_set_src(lock, R.icon.lock_keyhole_16px);
+        }
+
+        auto rssi = lv_label_create(row);
+        lv_label_set_text(rssi, rssi_label(ap.rssi));
+        lv_obj_set_style_text_font(rssi, R.font.ipa_16, 0);
+        lv_obj_set_style_text_color(rssi, lv_color_hex(0x888888), 0);
+
+        bool secured = ap.secured;
+        std::string ssid = ap.ssid;
+        lv_obj_add_event_fn(row, LV_EVENT_CLICKED, [this, ssid, secured](lv_event_t *) {
+            if (secured) {
+                showPasswordDialog(ssid);
+            } else {
+                connectToAP(ssid, "");
+            }
+        });
+    }
+}
+
+// ── パスワードダイアログ ──────────────────────────────────────────────────
+
+void WiFiSetupScreen::showPasswordDialog(std::string ssid) {
+    lv_obj_clean(content_);
+    lv_obj_set_flex_flow(content_, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(content_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_style_pad_all(content_, 0, 0);
+    lv_obj_set_style_pad_row(content_, 0, 0);
+
+    // タイトル (24px)
+    auto title_cont = lv_obj_create(content_);
+    lv_obj_remove_style_all(title_cont);
+    lv_obj_set_size(title_cont, 320, 24);
+    lv_obj_set_flex_flow(title_cont, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(title_cont, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_hor(title_cont, 12, 0);
+    lv_obj_set_style_bg_color(title_cont, lv_color_hex(0xf5f5f5), 0);
+    lv_obj_set_style_bg_opa(title_cont, LV_OPA_COVER, 0);
+
+    auto title = lv_label_create(title_cont);
+    auto title_text = ssid + " のパスワード";
+    lv_label_set_text(title, title_text.c_str());
+    lv_obj_set_style_text_font(title, R.font.ipa_16, 0);
+    lv_obj_set_width(title, 296);
+    lv_label_set_long_mode(title, LV_LABEL_LONG_DOT);
+
+    // テキストエリア (36px)
+    auto ta = lv_textarea_create(content_);
+    lv_obj_set_size(ta, 320, 36);
+    lv_obj_set_style_text_font(ta, R.font.ipa_16, 0);
+    lv_obj_set_style_radius(ta, 0, 0);
+    lv_obj_set_style_border_side(ta, LV_BORDER_SIDE_BOTTOM, 0);
+    lv_obj_set_style_border_width(ta, 1, 0);
+    lv_textarea_set_password_mode(ta, true);
+    lv_textarea_set_one_line(ta, true);
+    lv_textarea_set_placeholder_text(ta, "パスワードを入力");
+
+    // キーボード (140px) — OK/キャンセルボタン付き
+    auto kb = lv_keyboard_create(content_);
+    lv_obj_set_size(kb, 320, 140);
+    lv_keyboard_set_textarea(kb, ta);
+
+    lv_obj_add_event_fn(kb, LV_EVENT_READY, [this, ta, ssid](lv_event_t *) {
+        std::string password = lv_textarea_get_text(ta);
+        connectToAP(ssid, password);
+    });
+    lv_obj_add_event_fn(kb, LV_EVENT_CANCEL, [this](lv_event_t *) {
+        startScan();
+    });
+}
+
+// ── 接続 ──────────────────────────────────────────────────────────────────
+
+void WiFiSetupScreen::connectToAP(std::string ssid, std::string password) {
+    showConnecting(ssid);
+    network_manager.connect(ssid, password, [this, ssid](NetworkManager::Result result) {
+        lv_lock();
+        lv_async_call([this, result, ssid]() {
+            handleConnectResult(result, ssid);
+        });
+        lv_unlock();
+    });
+}
+
+void WiFiSetupScreen::showConnecting(const std::string &ssid) {
+    lv_obj_clean(content_);
+    lv_obj_set_flex_flow(content_, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(content_, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_row(content_, 12, 0);
+
+    auto spinner = lv_spinner_create(content_);
+    lv_obj_set_size(spinner, 48, 48);
+    lv_obj_set_style_arc_width(spinner, 5, LV_PART_MAIN);
+    lv_obj_set_style_arc_width(spinner, 5, LV_PART_INDICATOR);
+
+    auto ssid_label = lv_label_create(content_);
+    lv_label_set_text(ssid_label, ("SSID: " + ssid).c_str());
+    lv_obj_set_style_text_font(ssid_label, R.font.ipa_16, 0);
+
+    auto status = lv_label_create(content_);
+    lv_label_set_text(status, "接続中...");
+    lv_obj_set_style_text_font(status, R.font.ipa_16, 0);
+    lv_obj_set_style_text_color(status, lv_color_hex(0x888888), 0);
+}
+
+void WiFiSetupScreen::handleConnectResult(NetworkManager::Result result, const std::string &ssid) {
+    if (result == NetworkManager::Result::Ok) {
+        screen_manager.load(std::make_unique<KyoshinScreen>());
+        return;
+    }
+    showError(ssid, result);
+}
+
+// ── エラー ────────────────────────────────────────────────────────────────
+
+void WiFiSetupScreen::showError(const std::string &ssid, NetworkManager::Result result) {
+    lv_obj_clean(content_);
+    lv_obj_set_flex_flow(content_, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(content_, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_row(content_, 12, 0);
+
+    auto title = lv_label_create(content_);
+    lv_label_set_text(title, "接続失敗");
+    lv_obj_set_style_text_font(title, R.font.ipa_24, 0);
+
+    const char *reason;
+    switch (result) {
+    case NetworkManager::Result::ApNotFound:  reason = "APが見つかりませんでした"; break;
+    case NetworkManager::Result::AuthFailed:  reason = "パスワードが正しくありません"; break;
+    case NetworkManager::Result::AssocFailed: reason = "接続に失敗しました"; break;
+    case NetworkManager::Result::IpFailed:    reason = "IPアドレスを取得できませんでした"; break;
+    default:                                  reason = "エラーが発生しました"; break;
+    }
+
+    auto msg = lv_label_create(content_);
+    lv_label_set_text(msg, reason);
+    lv_obj_set_style_text_font(msg, R.font.ipa_16, 0);
+    lv_obj_set_style_text_color(msg, lv_color_hex(0x888888), 0);
+
+    auto btn = lv_button_create(content_);
+    lv_obj_set_style_pad_hor(btn, 20, 0);
+    lv_obj_set_style_pad_ver(btn, 8, 0);
+    auto btn_label = lv_label_create(btn);
+    lv_obj_set_style_text_font(btn_label, R.font.ipa_16, 0);
+
+    if (result == NetworkManager::Result::AuthFailed) {
+        lv_label_set_text(btn_label, "パスワードを再入力");
+        lv_obj_add_event_fn(btn, LV_EVENT_CLICKED, [this, ssid](lv_event_t *) {
+            showPasswordDialog(ssid);
+        });
+    } else {
+        lv_label_set_text(btn_label, "再スキャン");
+        lv_obj_add_event_fn(btn, LV_EVENT_CLICKED, [this](lv_event_t *) {
+            startScan();
+        });
+    }
+}

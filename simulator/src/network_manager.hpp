@@ -1,24 +1,32 @@
 #pragma once
 #include <string>
 #include <functional>
+#include <vector>
 
 class NetworkManager {
 public:
     enum class Result {
         Ok,
-        ApNotFound,
-        AuthFailed,
-        AssocFailed,
-        IpFailed,
-        Failed,
+        ApNotFound,   // SSIDが見つからない
+        AuthFailed,   // パスワード不正 / 認証失敗
+        AssocFailed,  // アソシエーション失敗
+        IpFailed,     // AP接続後にIPアドレス取得失敗
+        Failed,       // その他の失敗
     };
 
-    void init() {}
-    bool isConfigured() { return true; }
-    void connect(std::function<void(Result)> callback) { callback(Result::Ok); }
-    void connect(std::string /*ssid*/, std::string /*passwd*/, std::function<void(Result)> callback) { callback(Result::Ok); }
-    bool isConnected() { return true; }
-    std::string getWiFiSSID() { return "AP_SSID"; }
+    struct WiFiAP {
+        std::string ssid;
+        int8_t rssi;
+        bool secured;
+    };
+
+    void init();
+    bool isConfigured();
+    std::string getWiFiSSID();
+    void connect(std::function<void(Result)> callback);
+    void connect(std::string ssid, std::string passwd, std::function<void(Result)> callback);
+    bool isConnected();
+    void scanAPs(std::function<void(std::vector<WiFiAP>)> callback);
 };
 
 extern NetworkManager network_manager;

@@ -20,6 +20,7 @@ struct Resources {
         const lv_image_dsc_t *bell_ring;
         const lv_image_dsc_t *moon;
         const lv_image_dsc_t *ellipsis;
+        const lv_image_dsc_t *lock_keyhole_16px;
     } icon;
     struct {
         const lv_font_t *ipa_16;

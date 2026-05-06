@@ -5,12 +5,15 @@
 #include "esp_netif.h"
 #include "nvs_flash.h"
 #include <atomic>
+#include <algorithm>
+#include <unordered_map>
 
 static const char* TAG = "NetworkManager";
 
 NetworkManager network_manager;
 
 static std::function<void(NetworkManager::Result)> s_callback;
+static std::function<void(std::vector<NetworkManager::WiFiAP>)> s_scan_callback;
 static std::atomic<bool> s_connected{false};
 static std::atomic<bool> s_ap_connected{false}; // AP接続済みだがIP未取得の状態を追跡
 
@@ -36,7 +39,32 @@ static NetworkManager::Result disconnect_reason_to_result(uint8_t reason, bool a
 
 static void wifi_event_handler(void*, esp_event_base_t event_base, int32_t event_id, void* event_data) {
     if (event_base == WIFI_EVENT) {
-        if (event_id == WIFI_EVENT_STA_CONNECTED) {
+        if (event_id == WIFI_EVENT_SCAN_DONE) {
+            if (!s_scan_callback) return;
+            uint16_t ap_count = 0;
+            esp_wifi_scan_get_ap_num(&ap_count);
+            std::vector<wifi_ap_record_t> records(ap_count);
+            esp_wifi_scan_get_ap_records(&ap_count, records.data());
+
+            std::unordered_map<std::string, const wifi_ap_record_t*> best;
+            for (const auto& r : records) {
+                if (r.ssid[0] == '\0') continue;
+                std::string ssid(reinterpret_cast<const char*>(r.ssid));
+                auto it = best.find(ssid);
+                if (it == best.end() || r.rssi > it->second->rssi)
+                    best[ssid] = &r;
+            }
+
+            std::vector<NetworkManager::WiFiAP> aps;
+            aps.reserve(best.size());
+            for (const auto& [ssid, r] : best)
+                aps.push_back({ssid, r->rssi, r->authmode != WIFI_AUTH_OPEN});
+            std::sort(aps.begin(), aps.end(), [](const auto& a, const auto& b){ return a.rssi > b.rssi; });
+
+            auto cb = std::move(s_scan_callback);
+            s_scan_callback = nullptr;
+            cb(std::move(aps));
+        } else if (event_id == WIFI_EVENT_STA_CONNECTED) {
             s_ap_connected = true;
         } else if (event_id == WIFI_EVENT_STA_DISCONNECTED) {
             bool was_ap_connected = s_ap_connected.exchange(false);
@@ -90,6 +118,7 @@ void NetworkManager::init() {
 }
 
 bool NetworkManager::isConfigured() {
+    return false;
     wifi_config_t cfg = {};
     if (esp_wifi_get_config(WIFI_IF_STA, &cfg) != ESP_OK) return false;
     return cfg.sta.ssid[0] != '\0';
@@ -120,6 +149,12 @@ void NetworkManager::connect(std::string ssid, std::string passwd, std::function
 
 bool NetworkManager::isConnected() {
     return s_connected;
+}
+
+void NetworkManager::scanAPs(std::function<void(std::vector<WiFiAP>)> callback) {
+    s_scan_callback = std::move(callback);
+    wifi_scan_config_t config = {};
+    esp_wifi_scan_start(&config, false);
 }
 
 std::string NetworkManager::getWiFiSSID() {

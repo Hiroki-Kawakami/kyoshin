@@ -32,7 +32,7 @@ static void dot_timer_cb(lv_timer_t *timer) {
 }
 
 void WiFiConnectScreen::onAppear() {
-    network_manager.connect(CONFIG_APP_WIFI_SSID, CONFIG_APP_WIFI_PASSWORD, [](NetworkManager::Result){});
+    network_manager.connect([](NetworkManager::Result){});
     timer_ = lv_timer_create(connect_check_timer_cb, 100, this);
     dot_timer_ = lv_timer_create(dot_timer_cb, 500, this);
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <functional>
+#include <vector>
 
 class NetworkManager {
 public:
@@ -13,12 +14,19 @@ public:
         Failed,       // その他の失敗
     };
 
+    struct WiFiAP {
+        std::string ssid;
+        int8_t rssi;
+        bool secured;
+    };
+
     void init();
     bool isConfigured();
     std::string getWiFiSSID();
     void connect(std::function<void(Result)> callback);
     void connect(std::string ssid, std::string passwd, std::function<void(Result)> callback);
     bool isConnected();
+    void scanAPs(std::function<void(std::vector<WiFiAP>)> callback);
 };
 
 extern NetworkManager network_manager;

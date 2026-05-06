@@ -6,6 +6,7 @@ extern const lv_image_dsc_t monitor;
 extern const lv_image_dsc_t bell_ring;
 extern const lv_image_dsc_t moon;
 extern const lv_image_dsc_t ellipsis;
+extern const lv_image_dsc_t lock_keyhole_16px;
 
 // MARK: fonts
 extern const lv_font_t ipa_16;
@@ -24,6 +25,7 @@ const struct Resources R = {
         .bell_ring = &bell_ring,
         .moon = &moon,
         .ellipsis = &ellipsis,
+        .lock_keyhole_16px = &lock_keyhole_16px,
     },
     .font = {
         .ipa_16 = &ipa_16,
