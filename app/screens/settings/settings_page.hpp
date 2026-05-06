@@ -8,7 +8,7 @@
 
 class SettingsPage: public Screen {
 protected:
-    lv_obj_t *list_;
+    lv_obj_t *list_{nullptr};
 
     void createBackButton(const char *title);
     void createList();
