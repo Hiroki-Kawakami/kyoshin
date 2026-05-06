@@ -29,22 +29,16 @@ struct ServerConfig {
     const char *base_url;
     int imgWidth;
     int imgHeight;
-    int timeOffset;
-    int updateInterval;
-    int idleUpdateInterval;
     MapRegionConfig regions[MapRegion::count];
     const char *forecastUrlFormat;
     const char *latestUrl;
 };
 
 inline constexpr ServerConfig KYOSHIN_SERVER_CONFIG = {
-    // .base_url = "http://www.kmoni.bosai.go.jp",
-    .base_url = "http://192.168.0.103:8080",
+    .base_url = "http://www.kmoni.bosai.go.jp",
+    // .base_url = "http://192.168.0.103:8080",
     .imgWidth = 352,
     .imgHeight = 400,
-    .timeOffset = -2000, // msec
-    .updateInterval = 1, // sec
-    .idleUpdateInterval = 10, // sec
     .regions = {
         {
             .identifier = "japan",
