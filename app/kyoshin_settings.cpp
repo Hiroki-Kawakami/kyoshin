@@ -1,7 +1,44 @@
 #include "kyoshin_settings.hpp"
 #include <time.h>
+#include <vector>
 
 KyoshinSettings kyoshin_settings;
+
+void KyoshinSettings::restore() {
+    uint8_t u8;
+    uint16_t u16;
+    uint32_t u32;
+
+    if (nvs_.get("map_region", &u8) == NVS::Error::OK) map_region_ = MapRegion(u8);
+    if (nvs_.get("borehole", &u8) == NVS::Error::OK) borehole_ = u8;
+    if (nvs_.get("realtime_img_type", &u8) == NVS::Error::OK) realtime_img_type_ = RealtimeImgType(u8);
+    if (nvs_.get("screen_layout", &u8) == NVS::Error::OK) screen_layout_ = static_cast<ScreenLayout>(u8);
+    if (nvs_.get("mute_training", &u8) == NVS::Error::OK) mute_training_ = u8;
+    if (nvs_.get("brightness", &u8) == NVS::Error::OK) brightness_ = u8;
+    if (nvs_.get("standby_brightness", &u8) == NVS::Error::OK) standby_brightness_ = u8;
+    if (nvs_.get("night_brightness", &u8) == NVS::Error::OK) night_brightness_ = u8;
+    if (nvs_.get("night_mode_enable", &u8) == NVS::Error::OK) night_mode_enable_ = u8;
+    if (nvs_.get("night_normal_behavior", &u8) == NVS::Error::OK) night_normal_behavior_ = static_cast<NightBehavior>(u8);
+    if (nvs_.get("night_alert_behavior", &u8) == NVS::Error::OK) night_alert_behavior_ = static_cast<NightBehavior>(u8);
+
+    if (nvs_.get("standby_duration", &u32) == NVS::Error::OK) standby_duration_ = u32;
+
+    if (nvs_.get("night_mode_start", &u16) == NVS::Error::OK) night_mode_start_ = u16;
+    if (nvs_.get("night_mode_end", &u16) == NVS::Error::OK) night_mode_end_ = u16;
+
+    size_t len = 0;
+    if (nvs_.get("normal_sound", static_cast<char*>(nullptr), &len) == NVS::Error::OK) {
+        std::vector<char> buf(len);
+        nvs_.get("normal_sound", buf.data(), &len);
+        normal_sound_ = buf.data();
+    }
+    len = 0;
+    if (nvs_.get("alert_sound", static_cast<char*>(nullptr), &len) == NVS::Error::OK) {
+        std::vector<char> buf(len);
+        nvs_.get("alert_sound", buf.data(), &len);
+        alert_sound_ = buf.data();
+    }
+}
 
 void KyoshinSettings::setMapRegion(MapRegion map_region) {
     map_region_ = map_region;

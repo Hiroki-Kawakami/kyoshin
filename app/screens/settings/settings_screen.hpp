@@ -4,4 +4,5 @@
 class SettingsScreen: public SettingsPage {
 public:
     virtual void build();
+    virtual void onDisappear();
 };

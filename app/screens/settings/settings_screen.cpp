@@ -57,3 +57,7 @@ void SettingsScreen::build() {
         screen_manager.push(std::make_unique<SettingsMiscScreen>());
     });
 }
+
+void SettingsScreen::onDisappear() {
+    kyoshin_settings.commit();
+}

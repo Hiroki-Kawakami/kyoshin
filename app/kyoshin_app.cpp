@@ -1,7 +1,7 @@
 #include "kyoshin_app.hpp"
 #include "screens/wifi_connect_screen.hpp"
 #include "screens/wifi_setup_screen.hpp"
-#include "nvs.hpp"
+#include "kyoshin_settings.hpp"
 #include "network_manager.hpp"
 
 KyoshinMonitor *kyoshin_monitor;
@@ -13,6 +13,7 @@ void show_wifi_connect() {
 
 void kyoshin_app() {
     NVS::init();
+    kyoshin_settings.restore();
     network_manager.init();
     if (network_manager.isConfigured()) {
         lv_lock();

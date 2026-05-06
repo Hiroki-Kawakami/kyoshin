@@ -18,6 +18,9 @@ enum class NightBehavior {
 
 class KyoshinSettings {
 public:
+    void restore();
+    void commit() { nvs_.commit(); }
+
     MapRegion getMapRegion() { return map_region_; }
     bool getBorehole() { return borehole_; }
     RealtimeImgType getRealtimeImageType() { return realtime_img_type_; }
