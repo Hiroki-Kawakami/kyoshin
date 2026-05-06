@@ -1,74 +1,4 @@
 dependencies:
-  espp/base_component:
-    component_hash: 8ce5e30215ef1a664ae8967908c1755c43ea0338b6814ffe6a0ba94969412062
-    dependencies:
-    - name: espp/logger
-      registry_url: https://components.espressif.com
-      require: private
-      version: '>=1.0'
-    - name: idf
-      require: private
-      version: '>=5.0'
-    source:
-      registry_url: https://components.espressif.com
-      type: service
-    version: 1.0.36
-  espp/cli:
-    component_hash: da7092b2ffcdf2620aa4fa784eb81eae8b4f518f23e86ecda7e929def4b85e96
-    dependencies:
-    - name: espp/logger
-      registry_url: https://components.espressif.com
-      require: private
-      version: '>=1.0'
-    - name: idf
-      require: private
-      version: '>=5.0'
-    source:
-      registry_url: https://components.espressif.com
-      type: service
-    version: 1.0.36
-  espp/format:
-    component_hash: 6a1b3b8548c903f52c1942c16d796bb946da7c2866e86d17cc8d44b746ee7753
-    dependencies:
-    - name: idf
-      require: private
-      version: '>=5.0'
-    source:
-      registry_url: https://components.espressif.com
-      type: service
-    version: 1.0.36
-  espp/logger:
-    component_hash: afd6709bfc54ba3f88387a1070ffe470253451c1e761a11228019e98ef90a0d9
-    dependencies:
-    - name: espp/format
-      registry_url: https://components.espressif.com
-      require: private
-      version: '>=1.0'
-    - name: idf
-      require: private
-      version: '>=5.0'
-    source:
-      registry_url: https://components.espressif.com
-      type: service
-    version: 1.0.36
-  espp/wifi:
-    component_hash: 3d6348b8c3347b221cc18c54eb3103993aa3b939df3edc6deca661bf9038b309
-    dependencies:
-    - name: espp/base_component
-      registry_url: https://components.espressif.com
-      require: private
-      version: '>=1.0'
-    - name: espp/cli
-      registry_url: https://components.espressif.com
-      require: private
-      version: '>=1.0'
-    - name: idf
-      require: private
-      version: '>=5.0'
-    source:
-      registry_url: https://components.espressif.com/
-      type: service
-    version: 1.0.36
   espressif/esp_lvgl_port:
     component_hash: b6360960f47b6776462e7092861b3ea66477ffb762a01baa0aecbb3d74cd50f4
     dependencies:
@@ -113,11 +43,10 @@ dependencies:
       type: service
     version: 0.2.13
 direct_dependencies:
-- espp/wifi
 - espressif/esp_lvgl_port
 - idf
 - m5stack/m5gfx
 - m5stack/m5unified
-manifest_hash: 928c2a170fc3d0b54d50153a9b6dd43254ce4ca524935c79323c4b20c813758e
+manifest_hash: 7fcf35d3b5ac547e52b5105b1075e497b7f71c8ff2424157378c6e2e62586c13
 target: esp32s3
 version: 2.0.0

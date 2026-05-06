@@ -1,20 +1,24 @@
 #pragma once
 #include <string>
+#include <functional>
 
 class NetworkManager {
 public:
-    void init() {}
-    bool isConnected() {
-        if (count_ > 20) return true;
-        count_++;
-        return false;
-    }
-    std::string getWiFiSSID() {
-        return "AP_SSID";
-    }
+    enum class Result {
+        Ok,
+        ApNotFound,
+        AuthFailed,
+        AssocFailed,
+        IpFailed,
+        Failed,
+    };
 
-private:
-    int count_{0};
+    void init() {}
+    bool isConfigured() { return true; }
+    void connect(std::function<void(Result)> callback) { callback(Result::Ok); }
+    void connect(std::string /*ssid*/, std::string /*passwd*/, std::function<void(Result)> callback) { callback(Result::Ok); }
+    bool isConnected() { return true; }
+    std::string getWiFiSSID() { return "AP_SSID"; }
 };
 
 extern NetworkManager network_manager;
